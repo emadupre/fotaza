@@ -1,5 +1,7 @@
 # Fotaza
 > Proyecto Final Integrador de Programacion WEB II
+
+Para hacer este readme utilicé esto: [Sintaxis](https://docs.github.com/es/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax)
 #### La aplicación la voy a construir con:
 * Model: Sequelize + PostgreSQL
 * Vista: Pug -> para renderizados en el servidor.

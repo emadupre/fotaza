@@ -42,52 +42,57 @@ Para hacer este readme utilicé esto: [Sintaxis](https://docs.github.com/es/get-
 
 #### Diagrama ER
 1.Contenido Principal
-  * Usuario <-> Publicacion: 1:N
+  * Usuario <-> Publicacion: (1:N)
     - 1 Usuario puede tener N(muchas) Publicaciones.
     - 1 Publicacion pertenece a 1 solo Usuario.
-  * Publicacion <-> Imagen: 1:N
+  * Publicacion <-> Imagen: (1:N)
     - 1 Publicacion puede contener N Imagenes.
     - 1 Imagen pertenece a 1 sola Publicación.
+    
 2.Clasificacion y Agrupación
-  * Publicacion <-> Etiqueta: N:M
+  * Publicacion <-> Etiqueta: (N:M)
     - N Publicaciones puede tener M Etiquetas
     - Para el diagrama hay una tabla intermedia PublicacionEtiqueta (1 Publicacion -> N PublicacionEtiqueta; 1 Etiqueta -> N PublicacionEtiqueta).
-  * Usuario <-> Coleccion: 1:N
+  * Usuario <-> Coleccion: (1:N)
     - 1 Usuario puede crear N Colecciones.
     - 1 Colección pertenece a 1 solo Usuario.
-  * Coleccion <-> Publicacion: N:M
+  * Coleccion <-> Publicacion: (N:M)
     - N Colecciones pueden guardar M Publicaciones.
     - Para el diagrama hay una tabla intermedia ColeccionPublicacion (1 Coleccion -> N ColeccionPublicacion; 1 Publicacion -> ColeccionPublicacion).
+    
 3.Interacciones(Com, Val, Int.)
-  * Usuario <-> Comentario: 1:N
+  * Usuario <-> Comentario: (1:N)
     - 1 Usuario puede escribir N Comentarios.
-  * Imagen <-> Comentario: 1:N
+  * Imagen <-> Comentario: (1:N)
     - 1 Imagen puede recibir N Comentarios.
-  * Usuario <-> Valoracion: 1:N
+  * Usuario <-> Valoracion: (1:N)
     - 1 Usuario puede dejar N Valoraciones (likes/votos).
-  * Imagen <-> Valoracion: 1:N
+  * Imagen <-> Valoracion: (1:N)
     - 1 Imagen puede recibir N Valoraciones.
-  * Usuario <-> Interes: 1:N
+  * Usuario <-> Interes: (1:N)
     - 1 Usuario puede marcar N intereses.
-  * Imagen <-> Interes: 1:N
+  * Imagen <-> Interes: (1:N)
     - 1 Imagen puede recibir N marcas de interes.
+    
 4.Moderación
-  * Usuario <-> DenunciaImagen: 1:N
+  * Usuario <-> DenunciaImagen: (1:N)
     - 1 Usuario puede realizar N Denuncias de Imagenes.
-  * Imagen <-> DenunciaImagen: 1:N
+  * Imagen <-> DenunciaImagen: (1:N)
     - 1 Imagen puede recibir N Denuncias.
-  * Usuario <-> DenunciaComentario: 1:N
+  * Usuario <-> DenunciaComentario: (1:N)
     - 1 Usuario puede realizar N Denuncias de comentarios.
-  * Comentario <-> DenunciaComentario: 1:N
+  * Comentario <-> DenunciaComentario: (1:N)
     - 1 Comentario puede recibir N Denuncias.
+    
 5.Red Social y Mensajes
-  * Usuario <-> Usuario: N:M
+  * Usuario <-> Usuario: (N:M)
     - Un usuario sigue a muchos y es seguido por muchos.
     - Para el diagrama hay una tabla intermediaria Seguimiento (1 Usuario -> N Seguimiento (seguidor_id); 1 Usuario -> N Seguimiento (seguido_id)).
-  * Usuario <-> Usuario: N:M
+  * Usuario <-> Usuario: (N:M)
     - Un usuario envia mensajes a muchos y recibe de muchos.
     - Para el diagrama hay una tabla intermediaria MensajePrivado (1 Usuario -> N MensajePrivado (remitente_id); 1 Usuario -> N MensajePrivado (destinatario_id)).
+    
 6.Notificaciones
-  * Usuario <-> Notificacion: 1:N
+  * Usuario <-> Notificacion: (1:N)
     - 1 Usuario recibe N Notificaciones.
     - 1 Usuario genera N Notificaciones con acciones.

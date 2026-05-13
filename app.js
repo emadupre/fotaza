@@ -3,6 +3,7 @@ const express = require("express");
 const session = require("express-session");
 const path = require("path");
 const sequelize = require("./config/database");
+require("./models");
 
 const app = express();
 
@@ -35,7 +36,12 @@ app.get("/", (req, res) => {
 //sync bd y arrancar el servidor
 const PORT = process.env.PORT || 3001;
 
-sequelize.sync({ force: false, alter: false })
+sequelize
+  .authenticate()
+  .then(() => {
+    console.log("Conexion establecida");
+    return sequelize.sync({ force: false, alter: false });
+  })
   .then(() => {
     console.log("Base de datos sincronizada");
     app.listen(PORT, () => {
@@ -43,5 +49,5 @@ sequelize.sync({ force: false, alter: false })
     });
   })
   .catch((err) => {
-    console.error("Error al sincronizar la BD:", err);
+    console.error("Error:", err);
   });

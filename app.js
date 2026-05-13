@@ -35,8 +35,7 @@ app.get("/", (req, res) => {
 //sync bd y arrancar el servidor
 const PORT = process.env.PORT || 3001;
 
-sequelize
-  .sync({ force: false, alter: false })
+sequelize.sync({ force: false, alter: false })
   .then(() => {
     console.log("Base de datos sincronizada");
     app.listen(PORT, () => {

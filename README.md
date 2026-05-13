@@ -21,3 +21,73 @@ Para hacer este readme utilicé esto: [Sintaxis](https://docs.github.com/es/get-
 /helpers >(funciones auxiliares)
 ```
   
+## Estructura para la Base de Datos:
+```
+> Usuario [id, nombre, email, password_hash, biografía, avatar, fecha_registro, cuenta_activa (bool), rol (usuario, validador)] | El validador es un perfil especial
+> Publicacion [id, titulo, descripcion, fecha_creacion, usuario_id] | Pertenece a un usuario
+> Imagen [id, url, publicacion_id, licencia (con_copyright, sin_copyright), marca_agua_texto (opcional), promedio_valoracion, total_votos, comentarios_cerrados] | Varias imagenes por publicacion
+> Etiqueta [id, nombre] | Tabla aux para publicacion
+> PublicacionEtiqueta [publicacion_id, etiqueta_id] | Tabla intermedia
+> Comentario [id, texto, fecha, usuario_id, imagen_id] | Pertenece a una imagen
+> Valoracion [id, puntuacion (1..5), usuario_id, imagen_id] | Un usuario puede votar una sola vez por imagen
+> DenunciaImagen [id, motivo, descripcion, fecha, usuario_id, imagen_id] | Una imagen puede tener varias denuncias de distintos usuarios.
+> DenunciaComentario [id, motivo, descripcion, fecha, usuario_id, comentario_id] | Comentarios tambien denunciables.
+> Seguimiento [id, seguimiento_id, seguido_id] | Un usuario sigue a otro, sin seguirse así mismo.
+> Notificacion [id, tipo_evento, fecha, leida (bool), usuario_id (destinatario), actor_id (quien generó la acción), referencia_id (comentario, valoracion, seguimiento, etc.), referencia_tipo] | Gestor de notificaciones
+> Coleccion [id, nombre, usuario_id] | Coleeciones personales
+> ColeccionPublicacion [coleccion_id, publicacion_id] | Tabla intermedia
+> MensajePrivado [id, remitente_id, destinatario_id, asunto, contenido, fecha, leido] | Para el contacto
+> Interes [id, usuario_id, imagen_id, fecha] | Cuando un usuario marca "me interesa", vinculado a mensajeria.
+```
+
+#### Diagrama ER
+1.Contenido Principal
+  * Usuario <-> Publicacion: 1:N
+    - 1 Usuario puede tener N(muchas) Publicaciones.
+    - 1 Publicacion pertenece a 1 solo Usuario.
+  * Publicacion <-> Imagen: 1:N
+    - 1 Publicacion puede contener N Imagenes.
+    - 1 Imagen pertenece a 1 sola Publicación.
+2.Clasificacion y Agrupación
+  * Publicacion <-> Etiqueta: N:M
+    - N Publicaciones puede tener M Etiquetas
+    - Para el diagrama hay una tabla intermedia PublicacionEtiqueta (1 Publicacion -> N PublicacionEtiqueta; 1 Etiqueta -> N PublicacionEtiqueta).
+  * Usuario <-> Coleccion: 1:N
+    - 1 Usuario puede crear N Colecciones.
+    - 1 Colección pertenece a 1 solo Usuario.
+  * Coleccion <-> Publicacion: N:M
+    - N Colecciones pueden guardar M Publicaciones.
+    - Para el diagrama hay una tabla intermedia ColeccionPublicacion (1 Coleccion -> N ColeccionPublicacion; 1 Publicacion -> ColeccionPublicacion).
+3.Interacciones(Com, Val, Int.)
+  * Usuario <-> Comentario: 1:N
+    - 1 Usuario puede escribir N Comentarios.
+  * Imagen <-> Comentario: 1:N
+    - 1 Imagen puede recibir N Comentarios.
+  * Usuario <-> Valoracion: 1:N
+    - 1 Usuario puede dejar N Valoraciones (likes/votos).
+  * Imagen <-> Valoracion: 1:N
+    - 1 Imagen puede recibir N Valoraciones.
+  * Usuario <-> Interes: 1:N
+    - 1 Usuario puede marcar N intereses.
+  * Imagen <-> Interes: 1:N
+    - 1 Imagen puede recibir N marcas de interes.
+4.Moderación
+  * Usuario <-> DenunciaImagen: 1:N
+    - 1 Usuario puede realizar N Denuncias de Imagenes.
+  * Imagen <-> DenunciaImagen: 1:N
+    - 1 Imagen puede recibir N Denuncias.
+  * Usuario <-> DenunciaComentario: 1:N
+    - 1 Usuario puede realizar N Denuncias de comentarios.
+  * Comentario <-> DenunciaComentario: 1:N
+    - 1 Comentario puede recibir N Denuncias.
+5.Red Social y Mensajes
+  * Usuario <-> Usuario: N:M
+    - Un usuario sigue a muchos y es seguido por muchos.
+    - Para el diagrama hay una tabla intermediaria Seguimiento (1 Usuario -> N Seguimiento (seguidor_id); 1 Usuario -> N Seguimiento (seguido_id)).
+  * Usuario <-> Usuario: N:M
+    - Un usuario envia mensajes a muchos y recibe de muchos.
+    - Para el diagrama hay una tabla intermediaria MensajePrivado (1 Usuario -> N MensajePrivado (remitente_id); 1 Usuario -> N MensajePrivado (destinatario_id)).
+6.Notificaciones
+  * Usuario <-> Notificacion: 1:N
+    - 1 Usuario recibe N Notificaciones.
+    - 1 Usuario genera N Notificaciones con acciones.

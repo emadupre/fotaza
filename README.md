@@ -40,7 +40,8 @@ Para hacer este readme utilicé esto: [Sintaxis](https://docs.github.com/es/get-
 > Interes [id, usuario_id, imagen_id, fecha] | Cuando un usuario marca "me interesa", vinculado a mensajeria.
 ```
 
-#### Diagrama ER
+## Diagrama ER
+![Diagrama](https://github.com/emadupre/fotaza/blob/main/Modelos%20-%20Relaciones.png)
 1.Contenido Principal
   * Usuario <-> Publicacion: (1:N)
     - 1 Usuario puede tener N(muchas) Publicaciones.

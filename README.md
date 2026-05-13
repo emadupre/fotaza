@@ -97,3 +97,67 @@ Para hacer este readme utilicé esto: [Sintaxis](https://docs.github.com/es/get-
   * Usuario <-> Notificacion: (1:N)
     - 1 Usuario recibe N Notificaciones.
     - 1 Usuario genera N Notificaciones con acciones.
+
+
+## Inicializacion del proyecto
+> Paso a paso como cree todo:
+```
+mkdir fotaza
+cd fotaza
+npm init -y (acá usé el -y para omitir el asistente y crea el package.json por defecto).
+```
+> Paso siguiente instalo las dependencias que voy a utilizar:
+```
+npm install express sequelize pg-hstore pug multer sharp bcrypt express-session dotenv
+```
+> Y despues para el desarrollo:
+```
+npm install --save-dev nodemon sequelize-cli (el sequelize-cli me va a servir para automatizar las tareas con la bd)
+```
+> Creamos las carpetas:
+```
+fotaza/
+├── config/
+├── models/
+├── controllers/
+├── routes/
+├── views/
+├── public/
+│   ├── css/
+│   └── js/
+├── uploads/
+├── middlewares/
+├── helpers/
+├── .env.example
+├── app.js
+└── package.json
+```
+> Dentro del .env.example ponemos las variables de entorno
+```
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=fotaza
+DB_USER=emadupre
+DB_PASSWORD=admin
+SESSION_SECRET=proyecto_final_web
+PORT=3001 (acá yo tuve que utilizar el puerto 3001 ya que en el puerto 3000 tengo el ADGuard configurado).
+```
+> Configuramos el Sequelize en config/database.js
+```
+const { Sequelize } = require('Sequelize');
+require('dotenv').config();
+
+const sequelize = new Sequelize(
+  process.env.DB_NAME,
+  process.env.DB_USER,
+  process.env.DB_PASSWORD,
+  {
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    dialect: 'postgres',
+    logging: false, // acá se que si quiero ver las consultas SQL se puede poner en **true**
+  }
+);
+
+module.exports = sequelize;
+```

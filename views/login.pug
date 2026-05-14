@@ -1,0 +1,14 @@
+extends layout.pug 
+
+block content 
+  .row.justify-content-center 
+    .col-md-4 
+      h2 Iniciar Sesion 
+      form(action="/login" method="POST")
+        .mb-3 
+          label.form-label(for="email") Email 
+          input#email.form-control(type="email", name="email" required);
+        .mb-3 
+          label.form-label(for="password") Contraseña
+          input#password.form-control(type="password" name="password" required)
+        button.btn.btn-primary.w-100(type="submit") Ingresar

@@ -1,0 +1,9 @@
+extends layout.pug 
+
+block content 
+  .text-center 
+    h1 Bienvenido a Fotaza 
+    p.lead Comunidad de Fotografos 
+    if !usuario
+      a.btn.btn-primary(href="/login") Iniciar Sesion 
+      a.btn.btn-outline-primary.ms-2(href="/registro") Registrate

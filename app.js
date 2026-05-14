@@ -6,6 +6,10 @@ const sequelize = require("./config/database");
 require("./models");
 const Usuario = require("./models/Usuario");
 const bcrypt = require("bcrypt");
+const {
+  requiereAutenticacion,
+  requiereInvitado,
+} = require("./middlewares/auth");
 
 const app = express();
 
@@ -84,6 +88,57 @@ app.post("/registro", async (req, res) => {
 app.get("/logout", (req, res) => {
   req.session.destroy();
   res.redirect("/");
+});
+
+//perfil propio
+app.get("/perfil", requiereAutenticacion, async (req, res) => {
+  return res.redirect(`/perfil/${req.session.usuario.id}`);
+});
+
+// perfil del usuario especifico
+app.get("/perfil/:id", requiereAutenticacion, async (req, res) => {
+  try {
+    const usuarioId = req.params.id;
+    const usuarioPerfil = await Usuario.findByPk(usuarioId);
+
+    if (!usuarioPerfil) {
+      return res.status(404).send("Usuario no encontrado");
+    }
+
+    //cuento los seguidores y seguidos
+    const { Seguimiento, Publicacion } = require("./models");
+
+    const seguidores = await Seguimiento.count({
+      where: { seguido_id: usuarioId },
+    });
+    const seguidos = await Seguimiento.count({
+      where: {
+        seguidor_id: usuarioId,
+      },
+    });
+
+    // chequeamos si el user actual sigue a X perfil
+    const yaSigo = await Seguimiento.findOne({
+      where: { seguidor_id: req.session.usuario.id, seguido_id: usuarioId },
+    });
+
+    // cargamos las publis
+    const publicaciones = await Publicacion.findAll({
+      where: { usuario_id: usuarioId },
+      order: [["fecha_creacion", "DESC"]],
+    });
+
+    res.render("perfil", {
+      usuarioPerfil,
+      seguidores,
+      seguidos,
+      yaSigo: !!yaSigo,
+      publicaciones,
+      esPropioPerfil: req.session.usuario.id == usuarioId,
+    });
+  } catch (error) {
+    res.status(500).send("Error al cargar perfil");
+  }
 });
 
 //sync bd y arrancar el servidor

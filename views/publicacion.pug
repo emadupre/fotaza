@@ -1,0 +1,99 @@
+extends layout.pug 
+
+block content 
+  .row 
+    .col-md-8 
+      h2= publicacion.titulo 
+      p.text-muted 
+        | Por 
+        a(href=`/perfil/${publicacion.Usuario.id}`)= publicacion.Usuario.nombre 
+        | - #{publicacion.fecha_creacion.toLocaleDateString()} 
+
+      if publicacion.descripcion 
+        p= publicacion.descripcion 
+
+      if publicacion.Etiqueta && publicacion.Etiqueta.length > 0
+        p 
+          each etiqueta in publicacion.Etiqueta 
+            span.badge.bg-secondary.me-1= etiqueta.nombre 
+      
+      hr
+
+      //mostrarImagenes
+
+      if publicacion.Imagens && publicacion.Imagens.length > 0
+        each imagen in publicacion.Imagens
+          .card.mb-3 
+            img.card-img-top(src=imagen.url alt=publicacion.titulo)
+            .card-body 
+              p 
+                strong Licencia: 
+                | #{imagen.licencia === 'con_copyright' ? 'Con Copyright': 'Sin Copyright'}
+              
+              if imagen.marca_agua_texto 
+                p 
+                  strong Marca de agua: 
+                  | #{imagen.marca_agua_texto}
+
+              //valoracion
+              p 
+                strong Valoracion: 
+                | #{Number(imagen.promedio_valoracion).toFixed(1)} / 5
+                | (#{imagen.total_votos} votos)
+              
+              if usuario && !esAutor
+                form(action=`/valorar/${imagen.id}` method="POST" class="d-inline")
+                  select(name="puntuacion" class="form-select d-inline w-auto")  
+                    option(value="") Tu voto..
+                    option(value="1") 1
+                    option(value="2") 2
+                    option(value="3") 3
+                    option(value="4") 4
+                    option(value="5") 5 
+                  button.btn.btn-sm.btn-outline-warning(type="submit") Votar
+              
+              //me interesa
+              if usuario && !esAutor
+                form(action=`/me-interesa/${imagen.id}` method="POST" class="d-inline ms-2")
+                  button.btn.btn-sm.btn-outline-info(type="submit") Me interesa 
+              
+              //denunciar imagen
+              if usuario && !esAutor
+                a.btn.btn-sm.btn-outline-danger.ms-2(href=`/denunciar/imagen/${imagen.id}`) Denunciar 
+
+              //cerrar comentarios (si es el autor del post)
+              if esAutor 
+                form(action=`/cerrar-comentarios/${imagen.id}` method="POST" class="d-inline")
+                  if imagen.comentarios_cerrados 
+                    button.btn.btn-sm.btn-outline-success(type="submit") Reabrir comentarios 
+                  else 
+                    button.btn.btn-sm.btn-outline-warning(type="submit") Cerrar comentarios
+
+    .col-md-4 
+      if publicacion.Imagens && publicacion.Imagens.length > 0
+        - var imagen = publicacion.Imagens[0]
+        h4 Comentarios
+
+        if !imagen.comentarios_cerrados && usuario 
+          form(action=`/comentar/${imagen.id}` method="POST")
+            .mb-3 
+              textarea.form-control(name="texto" rows="3" placeholder="Escribe un comentario.." required)
+            button.btn.btn-primary.btn-sm(type="submit") Comentar 
+        
+        if imagen.comentarios_cerrados 
+          .alert.alert-warning Los comentarios están cerrados.
+
+        if comentarios && comentarios.length > 0
+          each comentario in comentarios 
+            .card.mb-2 
+              .card-body 
+                strong= comentario.Usuario.nombre 
+                p.mb-1= comentario.texto 
+                small.text-muted= comentario.fecha.toLocaleDateString()
+                if usuario && esAutor && !comentario.borrado
+                  form(action=`/borrar-comentario/${comentario.id}` method="POST" class="mt-1")
+                    button.btn.btn-sm.btn-outline-danger(type="submit") Borrar
+                if usuario && !esAutor
+                  a.btn.btn-sm.btn-outline-danger.ms-1(href=`/denunciar/comentario/${comentario.id}`) Denunciar
+        else 
+          p No hay comentarios aun.

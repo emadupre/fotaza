@@ -3,6 +3,7 @@ const express = require("express");
 const session = require("express-session");
 const path = require("path");
 const sequelize = require("./config/database");
+const { Sequelize } = require("sequelize");
 require("./models");
 const Usuario = require("./models/Usuario");
 const bcrypt = require("bcrypt");
@@ -370,6 +371,75 @@ app.post("/comentar/:imagen_id", requiereAutenticacion, async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).send("Error al comentar");
+  }
+});
+
+//valorar/puntuar imagen
+app.post("/valorar/:imagen_id", requiereAutenticacion, async (req, res) => {
+  try {
+    const {
+      Valoracion,
+      Imagen,
+      Notificacion,
+      Publicacion,
+    } = require("./models");
+    const { puntuacion } = req.body;
+    const imagen_id = req.params.imagen_id;
+
+    if (!puntuacion || puntuacion < 1 || puntuacion > 5) {
+      return res.status(400).send("Puntuacion invalida");
+    }
+
+    //chequeo que no es el autor propio de la imagen
+    const imagen = await Imagen.findByPk(imagen_id);
+    const publicacion = await Publicacion.findByPk(imagen.publicacion_id);
+
+    if (publicacion.usuario_id === req.session.usuario.id) {
+      return res.status(400).send("No podes votar tu propia publicación.");
+    }
+
+    //chequeo que no hayan votado antes
+    const existente = await Valoracion.findOne({
+      where: { usuario_id: req.session.usuario.id, imagen_id },
+    });
+
+    if (existente) {
+      return res.status(400).send("Ya votaste");
+    }
+
+    await Valoracion.create({
+      puntuacion,
+      usuario_id: req.session.usuario.id,
+      imagen_id,
+    });
+
+    //actualizamos la valoracion es decir el promedio y el total.
+    const resultado = await Valoracion.findAll({
+      where: { imagen_id },
+      attributes: [
+        [sequelize.fn("AVG", sequelize.col("puntuacion")), "promedio"],
+        [sequelize.fn("COUNT", sequelize.col("id")), "total"],
+      ],
+      raw: true,
+    });
+
+    await imagen.update({
+      promedio_valoracion: parseFloat(resultado[0].promedio),
+      total_votos: parseInt(resultado[0].total),
+    });
+
+    await Notificacion.create({
+      tipo_evento: "valoracion",
+      usuario_id: publicacion.usuario_id,
+      actor_id: req.session.usuario.id,
+      referencia_id: imagen_id,
+      referencia_tipo: "imagen",
+    });
+
+    res.redirect("back");
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error al votar");
   }
 });
 

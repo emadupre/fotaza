@@ -274,9 +274,15 @@ app.post(
 );
 
 // ver publicacion
-app.get('/publicaciones/:id', async (req, res) => {
+app.get("/publicaciones/:id", async (req, res) => {
   try {
-    const { Publicacion, Imagen, Etiqueta, Comentario, Usuario: UsuarioModel } = require('./models');
+    const {
+      Publicacion,
+      Imagen,
+      Etiqueta,
+      Comentario,
+      Usuario: UsuarioModel,
+    } = require("./models");
 
     const publicacion = await Publicacion.findByPk(req.params.id, {
       include: [
@@ -288,36 +294,82 @@ app.get('/publicaciones/:id', async (req, res) => {
         },
         {
           model: UsuarioModel,
-          attributes: ['id', 'nombre'],
-        }
-      ]
+          attributes: ["id", "nombre"],
+        },
+      ],
     });
 
     if (!publicacion) {
-      return res.status(400).send('Publicacion no encontrada');
+      return res.status(400).send("Publicacion no encontrada");
     }
 
     //comentarios
     const comentarios = await Comentario.findAll({
       where: {
-        imagen_id: publicacion.Imagens[0]?.id
+        imagen_id: publicacion.Imagens[0]?.id,
       },
       include: [
         {
-          model: UsuarioModel, attributes: ['id', 'nombre']
-        }
+          model: UsuarioModel,
+          attributes: ["id", "nombre"],
+        },
       ],
-      order: [['fecha', 'ASC']]
+      order: [["fecha", "ASC"]],
     });
 
-    res.render('publicacion', {
+    res.render("publicacion", {
       publicacion,
       comentarios,
-      esAutor: req.session.usuario && req.session.usuario.id === publicacion.usuario_id,
+      esAutor:
+        req.session.usuario &&
+        req.session.usuario.id === publicacion.usuario_id,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).send('Error al cargar publicacion');
+    res.status(500).send("Error al cargar publicacion");
+  }
+});
+
+//comentar una imagen
+app.post("/comentar/:imagen_id", requiereAutenticacion, async (req, res) => {
+  try {
+    const {
+      Comentario,
+      Imagen,
+      Notificacion,
+      Publicacion,
+    } = require("./models");
+    const { texto } = req.body;
+    const imagenes = req.params.imagen_id;
+
+    //chequeo si la imagen existe y que no esten los comentarios cerrados
+    const imagen = await Imagen.findByPk(imagen_id);
+    if (!imagen || imagen.comentarios_cerrados) {
+      return res.status(400).send("No se puede comentar");
+    }
+
+    await Comentario.create({
+      texto,
+      usuario_id: req.session.usuario.id,
+      imagen_id,
+    });
+
+    //notificacion para el creador de la publicacion
+    const publicacion = await Publicacion.findByPk(imagen.publicacion_id);
+    if (publicacion.usuario_id !== req.session.usuario.id) {
+      await Notificacion.create({
+        tipo_evento: "comentario",
+        usuario_id: publicacion.usuario_id,
+        actor_id: req.session.usuario.id,
+        referencia_id: imagen_id,
+        referencia_tipo: "imagen",
+      });
+    }
+
+    res.redirect("back");
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error al comentar");
   }
 });
 

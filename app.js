@@ -341,7 +341,7 @@ app.post("/comentar/:imagen_id", requiereAutenticacion, async (req, res) => {
       Publicacion,
     } = require("./models");
     const { texto } = req.body;
-    const imagenes = req.params.imagen_id;
+    const imagen_id = req.params.imagen_id;
 
     //chequeo si la imagen existe y que no esten los comentarios cerrados
     const imagen = await Imagen.findByPk(imagen_id);

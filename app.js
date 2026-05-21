@@ -484,6 +484,26 @@ app.post('/me-interesa/:imagen_id', requiereAutenticacion, async (req, res) => {
   }
 });
 
+// si soy autor cerrar comentarios
+app.post('/cerrar-comentarios/:imagen_id', requiereAutenticacion, async (req, res) => {
+  try {
+    const { Imagen, Publicacion } = require('./models');
+    const imagen = await Imagen.findByPk(req.params.imagen_id);
+    if (!imagen) return res.status(404).send('Imagen no encontrada');
+
+    const publicacion = await Publicacion.findByPk(imagen.publicacion_id);
+    if (publicacion.usuario_id !== req.session.usuario.id) {
+      return res.status(403).send('No tenes autorizacion capo');
+    }
+
+    await imagen.update({ comentarios_cerrados: !imagen.comentarios_cerrados });
+    res.redirect('back');
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error al cambiar estado de comentarios');
+  }
+});
+
 //sync bd y arrancar el servidor
 const PORT = process.env.PORT || 3001;
 

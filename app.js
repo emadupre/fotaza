@@ -444,22 +444,22 @@ app.post("/valorar/:imagen_id", requiereAutenticacion, async (req, res) => {
 });
 
 // marcar interes en una publicacion/imagen
-app.post('/me-interesa/:imagen_id', requiereAutenticacion, async (req, res) => {
+app.post("/me-interesa/:imagen_id", requiereAutenticacion, async (req, res) => {
   try {
-    const { Interes, Imagen, Notificacion, Publicacion } = require('./models');
+    const { Interes, Imagen, Notificacion, Publicacion } = require("./models");
     const imagen_id = req.params.imagen_id;
 
     const imagen = await Imagen.findByPk(imagen_id);
-    if (!imagen) return res.status(404).send('Imagen no encontrada');
+    if (!imagen) return res.status(404).send("Imagen no encontrada");
 
     const publicacion = await Publicacion.findByPk(imagen.publicacion_id);
     if (publicacion.usuario_id === req.session.usuario.id) {
-      return res.status(400).send('Es tu propia publicacion papá, que haces');
+      return res.status(400).send("Es tu propia publicacion papá, que haces");
     }
 
     // evitamos duplicados
     const existente = await Interes.findOne({
-      where: { usuario_id: req.session.usuario.id, imagen_id }
+      where: { usuario_id: req.session.usuario.id, imagen_id },
     });
     if (!existente) {
       await Interes.create({
@@ -470,39 +470,74 @@ app.post('/me-interesa/:imagen_id', requiereAutenticacion, async (req, res) => {
 
     // generamos la notificacion para el autor del post
     await Notification.create({
-      tipo_evento: 'me_interesa',
+      tipo_evento: "me_interesa",
       usuario_id: publicacion.usuario_id,
       actor_id: req.session.usuario.id,
       referencia_id: imagen_id,
-      referencia_tipo: 'imagen',
+      referencia_tipo: "imagen",
     });
 
     res.redirect(`/mensajes/enviar/${publicacion.usuario.id}`);
   } catch (error) {
     console.error(error);
-    res.status(500).send('Error al marcar interes');
+    res.status(500).send("Error al marcar interes");
   }
 });
 
 // si soy autor cerrar comentarios
-app.post('/cerrar-comentarios/:imagen_id', requiereAutenticacion, async (req, res) => {
-  try {
-    const { Imagen, Publicacion } = require('./models');
-    const imagen = await Imagen.findByPk(req.params.imagen_id);
-    if (!imagen) return res.status(404).send('Imagen no encontrada');
+app.post(
+  "/cerrar-comentarios/:imagen_id",
+  requiereAutenticacion,
+  async (req, res) => {
+    try {
+      const { Imagen, Publicacion } = require("./models");
+      const imagen = await Imagen.findByPk(req.params.imagen_id);
+      if (!imagen) return res.status(404).send("Imagen no encontrada");
 
-    const publicacion = await Publicacion.findByPk(imagen.publicacion_id);
-    if (publicacion.usuario_id !== req.session.usuario.id) {
-      return res.status(403).send('No tenes autorizacion capo');
+      const publicacion = await Publicacion.findByPk(imagen.publicacion_id);
+      if (publicacion.usuario_id !== req.session.usuario.id) {
+        return res.status(403).send("No tenes autorizacion capo");
+      }
+
+      await imagen.update({
+        comentarios_cerrados: !imagen.comentarios_cerrados,
+      });
+      res.redirect("back");
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Error al cambiar estado de comentarios");
     }
+  },
+);
 
-    await imagen.update({ comentarios_cerrados: !imagen.comentarios_cerrados });
-    res.redirect('back');
-  } catch (error) {
-    console.error(error);
-    res.status(500).send('Error al cambiar estado de comentarios');
-  }
-});
+// si soy autor poder borrar comentarios
+app.post(
+  "/borrar-comentario/:comentario_id",
+  requiereAutenticacion,
+  async (req, res) => {
+    try {
+      const { Comentario, Imagen, Publicacion } = require("./models");
+      const comentario = await Comentario.findByPk(req.params.comentario_id);
+      if (!comentario) return res.status(404).send("Comentario no encontrado");
+
+      const imagen = await Imagen.findByPk(comentario.imagen_id);
+      const publicacion = await Publicacion.findByPk(imagen.publicacion_id);
+
+      if (publicacion.usuario_id !== req.session.usuario.id) {
+        return res.status(403).send("No autorizado");
+      }
+
+      await comentario.update({
+        borrado: true,
+      });
+
+      res.redirect("back");
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Error al borrar comentario");
+    }
+  },
+);
 
 //sync bd y arrancar el servidor
 const PORT = process.env.PORT || 3001;

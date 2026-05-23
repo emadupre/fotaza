@@ -539,6 +539,46 @@ app.post(
   },
 );
 
+//hacer denuncia de imagen
+app.get("/denunciar/imagen/:imagen_id", requiereAutenticacion, (req, res) => {
+  res.render("denunciar_imagen", { imagen_id: req.params.imagen_id });
+});
+
+//proceso la deuncia de la imagen
+app.post(
+  "/denunciar/imagen/:imagen_id",
+  requiereAutenticacion,
+  async (req, res) => {
+    try {
+      const { DenunciaImagen, Imagen, Publicacion } = require("./models");
+      const imagen_id = req.params.imagen_id;
+      const { motivo, descripcion } = req.body;
+
+      await DenunciaImagen.create({
+        motivo,
+        descripcion,
+        usuario_id: req.session.usuario.id,
+        imagen_id,
+      });
+
+      //no se puede editar la imagen si tiene denuncias
+      const image = await Imagen.findByPk(imagen_id);
+      const publicacion = await Publicacion.findByPk(imagen.publicacion_id);
+      // aca lo que podemos hacer es cambiar el estado de la iamgen a "en revision"
+      // si tiene alguna denuncia
+
+      if (publicacion.estado === "activa") {
+        await publicacion.update({ estado: "en_revision" });
+      }
+
+      res.redirect(`/publicaciones/${publicacion.id}`);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Error al denunciar imagen");
+    }
+  },
+);
+
 //sync bd y arrancar el servidor
 const PORT = process.env.PORT || 3001;
 

@@ -1,0 +1,17 @@
+extends layout.pug 
+
+block content 
+  h2 Denunciar Imagen 
+  form(action=`/denunciar/imagen/${imagen_id}` method="POST")
+    .mb-3 
+      label.form-label(for="motivo") Motivo 
+      select#motivo.form-select(name="motivo" required)
+        option(value="") Seleccionar motivo..
+        option(value="contenido_inapropiado") Contenido Inapropiado 
+        option(value="spam") Spam
+        option(value="derechos_autor") Infraccion de derechos de autor
+        option(value="otro") Otro 
+    .mb-3 
+      label.form-label(for="descripcion") Descripcion (opc)
+      textarea#descripcion.form-control(name="descripcion" rows="3")
+    button.btn.btn-danger(type='submit') Enviar denuncia

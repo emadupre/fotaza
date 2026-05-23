@@ -308,6 +308,7 @@ app.get("/publicaciones/:id", async (req, res) => {
     const comentarios = await Comentario.findAll({
       where: {
         imagen_id: publicacion.Imagens[0]?.id,
+        borrado: false,
       },
       include: [
         {
@@ -562,7 +563,7 @@ app.post(
       });
 
       //no se puede editar la imagen si tiene denuncias
-      const image = await Imagen.findByPk(imagen_id);
+      const imagen = await Imagen.findByPk(imagen_id);
       const publicacion = await Publicacion.findByPk(imagen.publicacion_id);
       // aca lo que podemos hacer es cambiar el estado de la iamgen a "en revision"
       // si tiene alguna denuncia
@@ -575,6 +576,42 @@ app.post(
     } catch (error) {
       console.error(error);
       res.status(500).send("Error al denunciar imagen");
+    }
+  },
+);
+
+// hacer denuncia de comentario
+app.get(
+  "/denunciar/comentario/:comentario_id",
+  requiereAutenticacion,
+  (req, res) => {
+    res.render("denunciar_comentario", {
+      comentario_id: req.params.comentario_id,
+    });
+  },
+);
+
+// proceso la denuncia de comentario
+app.post(
+  "/denuncia/comentario/:comentario_id",
+  requiereAutenticacion,
+  async (req, res) => {
+    try {
+      const { DenunciaComentario } = require("./models");
+      const comentario_id = req.params.comentario_id;
+      const { motivo, descripcion } = req.body;
+
+      await DenunciaComentario.create({
+        motivo,
+        descripcion,
+        usuario_id: req.session.usuario.id,
+        comentario_id,
+      });
+
+      res.redirect("back");
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Error al denunciar comentario");
     }
   },
 );

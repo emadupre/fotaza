@@ -616,6 +616,60 @@ app.post(
   },
 );
 
+// seguir a una persona
+app.post("/seguir/:usuario_id", requiereAutenticacion, async (req, res) => {
+  try {
+    const { Seguimiento, Notificacion } = require("./models");
+    const seguidor_id = req.session.usuario.id;
+    const seguido_id = req.params.usuario_id;
+
+    if (seguidor_id == seguido_id) {
+      return res.status(400).send("No podes seguirte a vos mismo papá");
+    }
+
+    const existente = await Seguimiento.findOne({
+      where: { seguidor_id, seguido_id },
+    });
+
+    if (!existente) {
+      await Seguimiento.create({ seguidor_id, seguido_id });
+
+      await Notificacion.create({
+        tipo_evento: "seguimiento",
+        usuario_id: seguido_id,
+        actor_id: seguidor_id,
+        referencia_id: null,
+        referencia_tipo: null,
+      });
+    }
+
+    res.redirect("back");
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error al seguir");
+  }
+});
+
+// dejar de seguir
+app.post(
+  "/dejar-de-seguir/:usuario_id",
+  requiereAutenticacion,
+  async (req, res) => {
+    try {
+      const { Seguimiento } = require("./models");
+      const seguidor_id = req.session.usuario.id;
+      const seguido_id = req.params.usuario_id;
+
+      await Seguimiento.destroy({
+        where: { seguidor_id, seguido_id },
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Error al dejar de seguir");
+    }
+  },
+);
+
 //sync bd y arrancar el servidor
 const PORT = process.env.PORT || 3001;
 

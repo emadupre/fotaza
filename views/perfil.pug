@@ -23,7 +23,7 @@ block content
             a.btn.btn-outline-primary(href="/perfil/editar") Editar Perfil 
           else 
             if yaSigo 
-              form(action=`/dejar-de-seguir/${usuarioPefil.id}` method="POST")
+              form(action=`/dejar-de-seguir/${usuarioPerfil.id}` method="POST")
                 button.btn.btn-outline-danger(type="submit") Dejar de seguir
             else 
               form(action=`/seguir/${usuarioPerfil.id}` method="POST")

@@ -1,0 +1,47 @@
+extends layout.pug 
+
+block content 
+  h2 Buscar publicaciones
+
+  form(action="/buscar" method="GET" class="mb-4")
+    .row 
+      .col-md-4.mb-2
+        input.form-control(type="text" name="q" placeholder="Buscar.." value=terminos.q || '')
+      .col-md-2.mb-2 
+        input.form-control(type="text" name="etiqueta" placeholder="Etiqueta" value=terminos.etiqueta || '')
+      .col-md-2.mb-2
+        input.form-control(type="text" name="usuario" placeholder="Usuario" value=terminos.usuario || '')
+      .col-md-2.mb-2 
+        select.form-select(name="licencia")
+          option(value="") Licencia(todas)
+          option(value="sin_copyright" selected=terminos.licencia === 'sin_copyright') Sin Copyright
+          option(value="con_copyright" selected=terminos.licencia === 'con_copyright') Con Copyright
+      .col-md-1.mb-2 
+        input.form-control(type="number" name="valoracion_min" placeholder="Valoración" min="0" max="5" step="0.1" value=terminos.valoracion_min || '')
+      .col-md-1.mb-2
+        button.btn.btn-primary.w-100(type='submit') Buscar
+
+  if publicaciones && publicaciones.length > 0
+    .row 
+      each pub in publicaciones 
+        .col-md-4.mb-3 
+          .card 
+            if pub.Imagens && pub.Imagens.length > 0
+              img.card-img-top(src=pub.Imagens[0].url alt=pub.titulo style="height:200px;object-fit:cover")
+            .card-body
+              h5.card-title= pub.titulo 
+              p.card-text= pub.descripcion ? pub.descripcion.substring(0,100) + '...' : ''
+              p 
+                strong Por: 
+                a(href=`/perfil/${pub.Usuario.id}`)= pub.Usuario.nombre 
+              if pub.Imagens && pub.Imagens.length > 0
+                p 
+                  strong Valoracion: 
+                  | #{Number(pub.Imagens[0].promedio_valoracion).toFixed(1)} / 5
+                  | (#{pub.Imagens[0].total_votos} votos)
+              if pub.Etiqueta && pub.Etiqueta.length > 0
+                each tag in pub.Etiqueta 
+                  span.badge.bg-secondary.me-1= tag.nombre
+              a.btn.btn-sm.btn-primary.mt-2(href=`/publicaciones/${pub.id}`) Ver detalle
+  else 
+    .alert.alert-info No hay publicaciones con esos criterios de busqueda, intenta de nuevo. 

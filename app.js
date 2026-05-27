@@ -670,6 +670,92 @@ app.post(
   },
 );
 
+// barra para busqueda
+app.get("/buscar", async (req, res) => {
+  try {
+    const { q, etiqueta, usuario, licencia, valoracion_min } = req.query;
+    const {
+      Publicacion,
+      Imagen,
+      Etiqueta,
+      Usuario: UsuarioModel,
+      Sequelize,
+    } = require("./models");
+    const Op = require("sequelize").Op;
+
+    const where = {
+      estado: "activa", //acá lo que descarto es que solo muestre las publicaciones activas.
+    };
+
+    if (q) {
+      where[Op.or] = [
+        { titulo: { [Op.iLike]: `%${q}%` } },
+        { descripcion: { [Op.iLike]: `%${q}%` } },
+      ];
+    }
+
+    if (usuario) {
+      const usuarioEncontrado = await UsuarioModel.findOne({
+        where: { nombre: { [Op.iLike]: `%${usuario}` } },
+      });
+      if (usuarioEncontrado) {
+        where.usuario_id = usuarioEncontrado.id;
+      } else {
+        where.usuario_id = -1; // esto es sin resultados
+      }
+    }
+
+    // esto lo pense para filtrar por licencia y valoracion
+    const includeImagen = {
+      model: Imagen,
+      required: false,
+    };
+
+    if (licencia) {
+      includeImagen.where = includeImagen.where || {};
+      includeImagen.where.licencia = licencia;
+    }
+
+    if (valoracion_min) {
+      includeImagen.where = includeImagen.where || {};
+      includeImagen.where.promedio_valoracion = {
+        [Op.gte]: parseFloat(valoracion_min),
+      };
+    }
+
+    //include para las etiquetas
+    const includeEtiqueta = {
+      model: Etiqueta,
+      required: false,
+    };
+
+    if (etiqueta) {
+      includeEtiqueta.where = { nombre: { [Op.iLike]: `%${etiqueta}%` } };
+      includeEtiqueta.required = true;
+    }
+
+    const publicaciones = await Publicacion.findAll({
+      where,
+      include: [
+        includeImagen,
+        includeEtiqueta,
+        { model: UsuarioModel, attributes: ["id", "nombre"] },
+      ],
+      order: [["fecha_creacion", "DESC"]],
+      limit: 50,
+    });
+
+    res.render("buscar", {
+      publicaciones,
+      terminos: req.query,
+      usuario: req.session.usuario,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error en la busqueda");
+  }
+});
+
 //sync bd y arrancar el servidor
 const PORT = process.env.PORT || 3001;
 

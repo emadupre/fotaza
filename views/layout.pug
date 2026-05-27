@@ -15,12 +15,16 @@ html(lang="en")
           ul.navbar-nav.ms-auto 
             if usuario 
               li.nav-item 
+                a.nav-link(href="/buscar") Buscar 
+              li.nav-item 
                 a.nav-link(href="/publicar") Publicar
               li.nav-item 
                 a.nav-link(href="/perfil") Mi Perfil 
               li.nav-item 
-                a.nav-link(href="/logout") Cerrar Sesion 
+                a.nav-link(href="/logout") Cerrar Sesion
             else
+              li.nav-item 
+                a.nav-link(href="/buscar") Buscar
               li.nav-item
                 a.nav-link(href="/login") Iniciar Sesion 
               li.nav-item 

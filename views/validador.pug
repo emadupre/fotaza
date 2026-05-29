@@ -1,0 +1,35 @@
+extends layout.pug 
+
+block content 
+  h2 Panel del Validador 
+  if publicaciones.length > 0
+    each publicacion in publicaciones 
+      .card.mb-4 
+        .card-body 
+          h4= publicacion.titulo 
+          p 
+            strong Autor: 
+            a(href=`/perfil/${publicacion.Usuario.id}`)= publicacion.Usuario.nombre 
+            | (#{publicacion.Usuario.cuenta_activa ? 'Activo' : 'Inactivo'})
+          each imagen in publicacion.Imagens 
+            .row.mb-3 
+              .col-md-6 
+                img.img-fluid(src=imagen.url, alt=publicacion.titulo style="max-height:300px")
+              .col-md-6 
+                p 
+                  strong Denuncias (usuarios distintos):
+                  | #{new Set(imagen.DenunciaImagens.map(d => d.usuario_id)).size}
+                ul 
+                  each denuncia in imagen.DenunciaImagens 
+                    li 
+                      strong= denuncia.Usuario.nombre 
+                      | - #{denuncia.motivo}
+                      if denuncia.descripcion 
+                        | : #{denuncia.descripcion}
+        .mt-2 
+          form(action=`/validador/bajar/${publicacion.id}` method="POST" style="display:inline")
+            button.btn.btn-danger(type="submit") Dar de baja 
+          form(action=`/validador/desestimar/${publicacion.id}` method="POST" style="display:inline; margin-left:10px")
+            button.btn.btn-secondary(type='submit') Desestimar denuncias
+  else 
+    .alert.alert-info No hay publicaciones para revisar.

@@ -10,11 +10,13 @@ const bcrypt = require("bcrypt");
 const {
   requiereAutenticacion,
   requiereInvitado,
+  requiereRolValilador,
 } = require("./middlewares/auth");
 const multer = require("multer");
 const sharp = require("sharp");
 const fs = require("fs");
 const { url } = require("inspector");
+const { group } = require("console");
 
 const app = express();
 
@@ -551,7 +553,7 @@ app.post(
   requiereAutenticacion,
   async (req, res) => {
     try {
-      const { DenunciaImagen, Imagen, Publicacion } = require("./models");
+      const { DenunciaImagen } = require("./models");
       const imagen_id = req.params.imagen_id;
       const { motivo, descripcion } = req.body;
 
@@ -563,16 +565,9 @@ app.post(
       });
 
       //no se puede editar la imagen si tiene denuncias
+      const { Imagen } = require("./models");
       const imagen = await Imagen.findByPk(imagen_id);
-      const publicacion = await Publicacion.findByPk(imagen.publicacion_id);
-      // aca lo que podemos hacer es cambiar el estado de la iamgen a "en revision"
-      // si tiene alguna denuncia
-
-      if (publicacion.estado === "activa") {
-        await publicacion.update({ estado: "en_revision" });
-      }
-
-      res.redirect(`/publicaciones/${publicacion.id}`);
+      res.redirect(`/publicaciones/${imagen.publicacion_id}`);
     } catch (error) {
       console.error(error);
       res.status(500).send("Error al denunciar imagen");
@@ -684,7 +679,7 @@ app.get("/buscar", async (req, res) => {
     const Op = require("sequelize").Op;
 
     const where = {
-      estado: "activa", //acá lo que descarto es que solo muestre las publicaciones activas.
+      estado: { [Op.ne]: "baja" }, //acá lo que descarto es que solo muestre las publicaciones activas.
     };
 
     if (q) {
@@ -755,6 +750,139 @@ app.get("/buscar", async (req, res) => {
     res.status(500).send("Error en la busqueda");
   }
 });
+
+// panel validador
+app.get("/validador", requiereRolValilador, async (req, res) => {
+  try {
+    const {
+      Publicacion,
+      Imagen,
+      DenunciaImagen,
+      Usuario: UsuarioModel,
+    } = require("./models");
+    const sequelize = require("./config/database");
+    const { Op } = require("sequelize");
+
+    const [resultados] = await sequelize.query(`
+      SELECT "Imagen"."publicacion_id"
+      FROM "imagenes" AS "Imagen"
+      INNER JOIN "denuncias_imagenes" AS "DenunciaImagen"
+        ON "Imagen"."id" = "DenunciaImagen"."imagen_id"
+      GROUP BY "Imagen"."id", "Imagen"."publicacion_id"
+      HAVING COUNT(DISTINCT "DenunciaImagen"."usuario_id") > 3
+      `);
+
+    const idsPublicaciones = resultados.map((r) => r.publicacion_id);
+
+    if (idsPublicaciones.length === 0) {
+      return res.render("validador", {
+        publicaciones: [],
+        usuario: req.session.usuario,
+      });
+    }
+
+    const publicaciones = await Publicacion.findAll({
+      where: {
+        id: idsPublicaciones,
+        estado: { [Op.ne]: "baja" },
+      },
+      include: [
+        {
+          model: Imagen,
+          include: [
+            {
+              model: DenunciaImagen,
+              include: [{ model: UsuarioModel, attributes: ["id", "nombre"] }],
+            },
+          ],
+        },
+        {
+          model: UsuarioModel,
+          attributes: ["id", "nombre", "cuenta_activa"],
+        },
+      ],
+    });
+
+    res.render("validador", { publicaciones, usuario: req.session.usuario });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error en el panel del validador");
+  }
+});
+
+// dar de baja la publicacion en su totalidad
+app.post(
+  "/validador/bajar/:publicacion_id",
+  requiereRolValilador,
+  async (req, res) => {
+    try {
+      const { Publicacion, Usuario: UsuarioModel } = require("./models");
+      const publicacion = await Publicacion.findByPk(req.params.publicacion_id);
+
+      if (!publicacion || publicacion.estado === "baja") {
+        return res
+          .status(404)
+          .send("Publicacion no encontrada o ya tiene la baja.");
+      }
+
+      // cambiar estado de la publicacion
+      await publicacion.update({ estado: "baja " });
+
+      // verificar si el autor tiene 3 publicaciones bajas para inhabilitarla.
+      const bajas = await Publicacion.count({
+        where: { usuario_id: publicacion.usuario_id, estado: "baja" },
+      });
+
+      if (bajas >= 3) {
+        await UsuarioModel.update(
+          { cuenta_activa: false },
+          { where: { id: publicacion.usuario_id } },
+        );
+      }
+
+      res.redirect("/validador");
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Error al dar de baja");
+    }
+  },
+);
+
+// desestimar las denuncias de una publicacion por si es errado
+app.post(
+  "/validador/desestimar/:publicacion_id",
+  requiereRolValilador,
+  async (req, res) => {
+    try {
+      const { Publicacion, Imagen, DenunciaImagen } = require("./models");
+      const publicacion = await Publicacion.findByPk(
+        req.params.publicacion_id,
+        {
+          include: [{ model: Imagen }],
+        },
+      );
+
+      if (!publicacion)
+        return res.status(404).send("Publicacion no encontrada");
+
+      // eliminar todas las denuncias asociadas a la imagen de la publicacion
+      const idsImagenes = publicacion.Imagens.map((img) => img.id);
+      await DenunciaImagen.destroy({
+        where: { imagen_id: idsImagenes },
+      });
+
+      // esto más bien es opcional pero puede sumar el volver a estado activo si estaba en revision
+      if (publicacion.estado === "en_revision") {
+        await publicacion.update({ estado: "activa" });
+      }
+
+      res.redirect("/validador");
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Error al desestimar");
+    }
+  },
+);
 
 //sync bd y arrancar el servidor
 const PORT = process.env.PORT || 3001;

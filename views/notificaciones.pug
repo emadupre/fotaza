@@ -1,0 +1,40 @@
+extends layout.pug 
+
+block content 
+  .d-flex.justify-content-between.align-items-center.mb-3 
+    h2 Notificaciones 
+    if noLeidas > 0
+      form(action="/notificaciones/leer-todas" method="POST")
+        button.btn.btn-sm.btn-outline-secondary(type='submit') Marcar todas como leidas 
+  
+  if notificaciones.length > 0
+    each noti in notificaciones 
+      .card.mb-2(class=noti.leida ? 'border-secondary' : 'border-primary')
+        .card-body 
+          .d-flex.justify-content-between 
+            div 
+              case noti.tipo_evento 
+                when 'comentario'
+                  p.mb-1 
+                    strong= noti.actor ? noti.actor.nombre : 'Alguien'
+                    | comentó en una imagen tuya.
+                when 'valoracion'
+                  p.mb-1 
+                    strong= noti.actor ? noti.actor.nombre : 'Alguien'
+                    | valoro tu imagen.
+                when 'me_interesa'
+                  p.mb-1 
+                    strong= noti.actor ? noti.actor.nombre : 'Alguien'
+                    | está interesado/a en tu imagen.
+                when 'seguimiento'
+                  p.mb-1 
+                    strong= noti.actor ? noti.actor.nombre : 'Alguien'
+                    | comenzó a seguirte.
+                default 
+                  p.mb-1 Nueva interacción.
+              small.text-muted= noti.fecha.toLocaleString()
+            if !noti.leida
+              form(action=`/notificaciones/${noti.id}/leida` method="POST")
+                button.btn.btn-sm.btn-outline-primary(type='submit') Marcar leída
+  else 
+    .alert.alert-info No tienes notificaciones.

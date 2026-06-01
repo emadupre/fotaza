@@ -884,6 +884,79 @@ app.post(
   },
 );
 
+// notificaciones del usuario
+app.get("/notificaciones", requiereAutenticacion, async (req, res) => {
+  try {
+    const { Notificacion, Usuario: UsuarioModel } = require("./models");
+
+    const notificaciones = await Notificacion.findAll({
+      where: { usuario_id: req.session.usuario.id },
+      include: [
+        { model: UsuarioModel, as: "actor", attributes: ["id", "nombre"] },
+      ],
+      order: [["fecha", "DESC"]],
+      limit: 50,
+    });
+
+    // que se cuenten las no leidas
+    const noLeidas = await Notificacion.count({
+      where: { usuario_id: req.session.usuario.id, leida: false },
+    });
+
+    res.render("notificaciones", {
+      notificaciones,
+      noLeidas,
+      usuario: req.session.usuario,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error al cargar las notificaciones del usuario");
+  }
+});
+
+//marcamos como leida la notificaciones
+app.post(
+  "/notificaciones/:id/leida",
+  requiereAutenticacion,
+  async (req, res) => {
+    try {
+      const { Notificacion } = require("./models");
+      const notificacion = await Notificacion.findByPk(req.params.id);
+
+      if (!notificacion || notificacion.usuario_id !== req.session.usuario.id) {
+        return res.status(400).send("Notificacion no encontrada");
+      }
+
+      await notificacion.update({ leida: true });
+      res.redirect("back");
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Error al marcar como leída");
+    }
+  },
+);
+
+//marcamos como leida todas las notificaciones
+app.post(
+  "/notificaciones/leer-todas",
+  requiereAutenticacion,
+  async (req, res) => {
+    try {
+      const { Notificacion } = require("./models");
+      await Notificacion.update(
+        { leida: true },
+        { where: { usuario_id: req.session.usuario.id, leida: false } },
+      );
+      res.redirect("back");
+    } catch (error) {
+      console.error(error);
+      res
+        .status(500)
+        .send("Error al marcar como leidas a todas las notificaciones");
+    }
+  },
+);
+
 //sync bd y arrancar el servidor
 const PORT = process.env.PORT || 3001;
 

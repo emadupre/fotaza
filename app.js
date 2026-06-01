@@ -10,7 +10,7 @@ const bcrypt = require("bcrypt");
 const {
   requiereAutenticacion,
   requiereInvitado,
-  requiereRolValilador,
+  requiereRolValidador,
 } = require("./middlewares/auth");
 const multer = require("multer");
 const sharp = require("sharp");
@@ -91,8 +91,51 @@ async function crearMarcaAgua(texto) {
 }
 
 // rutas
-app.get("/", (req, res) => {
-  res.render("home");
+
+//correcion del home.
+app.get('/', async (req, res) => {
+  // si el usuario no esta logueado tieen que mostrar la home normal hasta ahora
+  if (!req.session.usuario) {
+    return res.render("home");
+  }
+
+  try {
+    const { Seguimiento, Publicacion, Imagen, Usuario: UsuarioModel } = require('./models');
+    const Op = require("sequelize").Op;
+
+    //obtener los id de usuarios seguidos
+    const seguidos = await Seguimiento.findAll({
+      where: { seguidor_id: req.session.usuario.id },
+      attributes: ["seguido_id"],
+    });
+
+    const idsSeguidos = seguidos.map(s => s.seguido_id);
+
+    let publicaciones = [];
+
+    if (idsSeguidos.length > 0) {
+      publicaciones = await Publicacion.findAll({
+        where: {
+          usuario_id: { [Op.in]: idsSeguidos },
+          estado: { [Op.ne]: "baja" },
+        },
+        include: [
+          { model: Imagen },
+          { model: UsuarioModel, attributes: ["id", "nombre"] },
+        ],
+        order: [["fecha_creacion", "DESC"]],
+        limit: 20,
+      });
+    }
+    
+    res.render("home", {
+      usuario: req.session.usuario,
+      publicaciones, // la view home.pug lo va usar
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error al cargar la home");
+  }
 });
 
 app.get("/login", (req, res) => {
@@ -370,7 +413,7 @@ app.post("/comentar/:imagen_id", requiereAutenticacion, async (req, res) => {
       });
     }
 
-    res.redirect("back");
+    res.redirect("/publicaciones/" + imagen.publicacion_id);
   } catch (error) {
     console.error(error);
     res.status(500).send("Error al comentar");
@@ -439,7 +482,7 @@ app.post("/valorar/:imagen_id", requiereAutenticacion, async (req, res) => {
       referencia_tipo: "imagen",
     });
 
-    res.redirect("back");
+    res.redirect("/publicaciones/" + publicacion.id);
   } catch (error) {
     console.error(error);
     res.status(500).send("Error al votar");
@@ -472,7 +515,7 @@ app.post("/me-interesa/:imagen_id", requiereAutenticacion, async (req, res) => {
     }
 
     // generamos la notificacion para el autor del post
-    await Notification.create({
+    await Notificacion.create({
       tipo_evento: "me_interesa",
       usuario_id: publicacion.usuario_id,
       actor_id: req.session.usuario.id,
@@ -480,7 +523,7 @@ app.post("/me-interesa/:imagen_id", requiereAutenticacion, async (req, res) => {
       referencia_tipo: "imagen",
     });
 
-    res.redirect(`/mensajes/enviar/${publicacion.usuario.id}`);
+    res.redirect("/publicaciones/" + publicacion.id);
   } catch (error) {
     console.error(error);
     res.status(500).send("Error al marcar interes");
@@ -505,7 +548,7 @@ app.post(
       await imagen.update({
         comentarios_cerrados: !imagen.comentarios_cerrados,
       });
-      res.redirect("back");
+      res.redirect("/publicaciones/" + publicacion.id);
     } catch (error) {
       console.error(error);
       res.status(500).send("Error al cambiar estado de comentarios");
@@ -534,7 +577,7 @@ app.post(
         borrado: true,
       });
 
-      res.redirect("back");
+      res.redirect("/publicaciones/" + publicacion.id);
     } catch (error) {
       console.error(error);
       res.status(500).send("Error al borrar comentario");
@@ -588,11 +631,16 @@ app.get(
 
 // proceso la denuncia de comentario
 app.post(
-  "/denuncia/comentario/:comentario_id",
+  "/denunciar/comentario/:comentario_id",
   requiereAutenticacion,
   async (req, res) => {
     try {
-      const { DenunciaComentario } = require("./models");
+      const {
+        DenunciaComentario,
+        Comentario,
+        Imagen,
+        Publicacion,
+      } = require("./models");
       const comentario_id = req.params.comentario_id;
       const { motivo, descripcion } = req.body;
 
@@ -603,7 +651,11 @@ app.post(
         comentario_id,
       });
 
-      res.redirect("back");
+      const comentario = await Comentario.findByPk(comentario_id);
+      const imagen = await Imagen.findByPk(comentario.imagen_id);
+      const publicacion = await Publicacion.findByPk(imagen.publicacion_id);
+
+      res.redirect("/publicaciones/" + publicacion.id);
     } catch (error) {
       console.error(error);
       res.status(500).send("Error al denunciar comentario");
@@ -638,7 +690,7 @@ app.post("/seguir/:usuario_id", requiereAutenticacion, async (req, res) => {
       });
     }
 
-    res.redirect("back");
+    res.redirect("/perfil/" + seguido_id);
   } catch (error) {
     console.error(error);
     res.status(500).send("Error al seguir");
@@ -658,6 +710,7 @@ app.post(
       await Seguimiento.destroy({
         where: { seguidor_id, seguido_id },
       });
+      res.redirect("/perfil/" + seguido_id);
     } catch (error) {
       console.error(error);
       res.status(500).send("Error al dejar de seguir");
@@ -752,7 +805,7 @@ app.get("/buscar", async (req, res) => {
 });
 
 // panel validador
-app.get("/validador", requiereRolValilador, async (req, res) => {
+app.get("/validador", requiereRolValidador, async (req, res) => {
   try {
     const {
       Publicacion,
@@ -813,7 +866,7 @@ app.get("/validador", requiereRolValilador, async (req, res) => {
 // dar de baja la publicacion en su totalidad
 app.post(
   "/validador/bajar/:publicacion_id",
-  requiereRolValilador,
+  requiereRolValidador,
   async (req, res) => {
     try {
       const { Publicacion, Usuario: UsuarioModel } = require("./models");
@@ -826,7 +879,7 @@ app.post(
       }
 
       // cambiar estado de la publicacion
-      await publicacion.update({ estado: "baja " });
+      await publicacion.update({ estado: "baja" });
 
       // verificar si el autor tiene 3 publicaciones bajas para inhabilitarla.
       const bajas = await Publicacion.count({
@@ -851,7 +904,7 @@ app.post(
 // desestimar las denuncias de una publicacion por si es errado
 app.post(
   "/validador/desestimar/:publicacion_id",
-  requiereRolValilador,
+  requiereRolValidador,
   async (req, res) => {
     try {
       const { Publicacion, Imagen, DenunciaImagen } = require("./models");
@@ -928,7 +981,7 @@ app.post(
       }
 
       await notificacion.update({ leida: true });
-      res.redirect("back");
+      res.redirect("/notificaciones");
     } catch (error) {
       console.error(error);
       res.status(500).send("Error al marcar como leída");
@@ -947,7 +1000,7 @@ app.post(
         { leida: true },
         { where: { usuario_id: req.session.usuario.id, leida: false } },
       );
-      res.redirect("back");
+      res.redirect("/notificaciones");
     } catch (error) {
       console.error(error);
       res

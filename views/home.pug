@@ -1,9 +1,27 @@
 extends layout.pug 
 
-block content 
-  .text-center 
-    h1 Bienvenido a Fotaza 
-    p.lead Comunidad de Fotografos 
-    if !usuario
+block content
+  if usuario 
+    h2 Inicio 
+    if publicaciones && publicaciones.length > 0
+      .row 
+        each pub in publicaciones 
+          .col-md-4.mb-3 
+            .card 
+              if pub.Imagens && pub.Imagens.length > 0
+                img.card-img-top(src=pub.Imagens[0].url alt=pub.titulo style="heigth:200px;object-fit:cover")
+              .card-body 
+                h5.card-title= pub.titulo 
+                p 
+                  strong Por: 
+                  a(href=`/perfil/${pub.Usuario.id}`)= pub.Usuario.nombre 
+                a.btn.btn-sm.btn-primary(href=`/publicaciones/${pub.id}`) Ver detalle 
+    else 
+      .alert.alert-info No sigues a ningun usuario o no han publicado nada.
+      a.btn.btn-outline-secondary(href="/buscar") Descubrir contenido de las otros usuarios
+  else 
+    .text-center 
+      h1 Bienvenido a Fotaza 
+      p.lead Comunidad de Fotografos
       a.btn.btn-primary(href="/login") Iniciar Sesion 
       a.btn.btn-outline-primary.ms-2(href="/registro") Registrate

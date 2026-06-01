@@ -17,19 +17,19 @@ block content
                 when 'comentario'
                   p.mb-1 
                     strong= noti.actor ? noti.actor.nombre : 'Alguien'
-                    | comentó en una imagen tuya.
+                    |   comentó en una imagen tuya.
                 when 'valoracion'
                   p.mb-1 
                     strong= noti.actor ? noti.actor.nombre : 'Alguien'
-                    | valoro tu imagen.
+                    |   valoró tu imagen.
                 when 'me_interesa'
                   p.mb-1 
                     strong= noti.actor ? noti.actor.nombre : 'Alguien'
-                    | está interesado/a en tu imagen.
+                    |   está interesado/a en tu imagen.
                 when 'seguimiento'
                   p.mb-1 
                     strong= noti.actor ? noti.actor.nombre : 'Alguien'
-                    | comenzó a seguirte.
+                    |   comenzó a seguirte.
                 default 
                   p.mb-1 Nueva interacción.
               small.text-muted= noti.fecha.toLocaleString()

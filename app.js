@@ -571,7 +571,7 @@ app.post("/me-interesa/:imagen_id", requiereAutenticacion, async (req, res) => {
       referencia_tipo: "imagen",
     });
 
-    res.redirect("/publicaciones/" + publicacion.id);
+    res.redirect(`/mensajes/enviar/${publicacion.usuario_id}`);
   } catch (error) {
     console.error(error);
     res.status(500).send("Error al marcar interes");
@@ -1057,6 +1057,72 @@ app.post(
     }
   },
 );
+
+// ver mensajes priv
+app.get("/mensajes", requiereAutenticacion, async (req, res) => {
+  try {
+    const { MensajePrivado, Usuario: UsuarioModel } = require("./models");
+    const Op = require("sequelize").Op;
+
+    const mensajes = await MensajePrivado.findAll({
+      where: {
+        [Op.or]: [
+          { remitente_id: req.session.usuario.id },
+          { destinatario_id: req.session.usuario.id },
+        ],
+      },
+      include: [
+        { model: UsuarioModel, as: "remitente", attributes: ["id", "nombre"] },
+        {
+          model: UsuarioModel,
+          as: "destinatario",
+          attributes: ["id", "nombre"],
+        },
+      ],
+      order: [["fecha", "DESC"]],
+    });
+
+    res.render("mensajes", { mensajes, usuario: req.session.usuario });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error al cargar mensajes");
+  }
+});
+
+// form para enviar el msj
+app.get(
+  "/mensajes/enviar/:usuario_id",
+  requiereAutenticacion,
+  async (req, res) => {
+    try {
+      const { Usuario: UsuarioModel } = require("./models");
+      const destinatario = await UsuarioModel.findByPk(req.params.usuario_id);
+      if (!destinatario) return res.status(404).send("Usuario no encontrado");
+      res.render("enviar_mensaje", { destinatario });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Error");
+    }
+  },
+);
+
+app.post("/mensajes/enviar", requiereAutenticacion, async (req, res) => {
+  try {
+    const { MensajePrivado } = require("./models");
+    const { destinatario_id, contenido } = req.body;
+
+    await MensajePrivado.create({
+      remitente_id: req.session.usuario.id,
+      destinatario_id,
+      contenido,
+    });
+
+    res.redirect("/mensajes");
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error al enviar");
+  }
+});
 
 //sync bd y arrancar el servidor
 const PORT = process.env.PORT || 3001;

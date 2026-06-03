@@ -1,0 +1,10 @@
+extends layout.pug 
+
+block content 
+  h2 Enviar mensaje a #{destinatario.nombre}
+  form(action="/mensajes/enviar" method="POST")
+    input(type="hidden" name="destinatario_id" value=destinatario.id)
+    .mb-3 
+      label.form-label(for="contenido") Mensaje 
+      textarea#contenido.form-control(name="contenido" rows="4" required)
+    button.btn.btn-primary(type='submit') Enviar

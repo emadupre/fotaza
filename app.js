@@ -105,6 +105,7 @@ app.get("/", async (req, res) => {
       Publicacion,
       Imagen,
       Usuario: UsuarioModel,
+      MensajePrivado,
     } = require("./models");
     const Op = require("sequelize").Op;
 
@@ -581,7 +582,16 @@ app.post("/me-interesa/:imagen_id", requiereAutenticacion, async (req, res) => {
       referencia_tipo: "imagen",
     });
 
-    res.redirect(`/mensajes/enviar/${publicacion.usuario_id}`);
+    // aca creamos un mensaje por default que referencie a la imagen que esta interesado
+    await MensajePrivado.create({
+      remitente_id: req.session.usuario.id,
+      destinatario_id: publicacion.usuario_id,
+      contenido: `Hola, estoy interesado en tu imagen "${publicacion.titulo}"`,
+      imagen_id: imagen_id,
+    });
+
+    //despues redigirimos al usuario a la conversacion con el autor del post
+    res.redirect("/mensajes/conversacion/" + publicacion.usuario_id);
   } catch (error) {
     console.error(error);
     res.status(500).send("Error al marcar interes");
@@ -1074,6 +1084,7 @@ app.get("/mensajes", requiereAutenticacion, async (req, res) => {
   try {
     const { MensajePrivado, Usuario: UsuarioModel } = require("./models");
     const Op = require("sequelize").Op;
+    const sequelize = require("./config/database");
 
     const mensajes = await MensajePrivado.findAll({
       where: {
@@ -1093,7 +1104,32 @@ app.get("/mensajes", requiereAutenticacion, async (req, res) => {
       order: [["fecha", "DESC"]],
     });
 
-    res.render("mensajes", { mensajes, usuario: req.session.usuario });
+    // agrupamos los chats con los usuarios
+    const conversacionesMap = new Map();
+
+    for (const msg of mensajes) {
+      const otroUsuario =
+        msg.remitente_id === req.session.usuario.id
+          ? msg.destinatario
+          : msg.remitente;
+
+      if (!conversacionesMap.has(otroUsuario.id)) {
+        conversacionesMap.set(otroUsuario.id, {
+          usuario: otroUsuario,
+          ultimoMensaje: msg,
+          noLeidos: 0,
+        });
+      }
+
+      // contar los msg no leidos
+      if (!msg.leido && msg.destinatario_id === req.session.usuario.id) {
+        conversacionesMap.get(otroUsuario.id).noLeidos++;
+      }
+    }
+
+    const conversaciones = Array.from(conversacionesMap.values());
+
+    res.render("mensajes", { conversaciones, usuario: req.session.usuario });
   } catch (error) {
     console.error(error);
     res.status(500).send("Error al cargar mensajes");
@@ -1128,12 +1164,76 @@ app.post("/mensajes/enviar", requiereAutenticacion, async (req, res) => {
       contenido,
     });
 
-    res.redirect("/mensajes");
+    res.redirect("/mensajes/conversacion" + destinatario_id);
   } catch (error) {
     console.error(error);
     res.status(500).send("Error al enviar");
   }
 });
+
+// conversacion
+app.get(
+  "/mensajes/conversacion/:otro_usuario_id",
+  requiereAutenticacion,
+  async (req, res) => {
+    try {
+      const { MensajePrivado, Usuario: UsuarioModel, Imagen } = require("./models");
+      const Op = require("sequelize").Op;
+
+      const otroUsuario = await UsuarioModel.findByPk(
+        req.params.otro_usuario_id,
+      );
+      if (!otroUsuario) return res.status(404).send("Usuario no encontrado");
+
+      const mensajes = await MensajePrivado.findAll({
+        where: {
+          [Op.or]: [
+            {
+              remitente_id: req.session.usuario.id,
+              destinatario_id: otroUsuario.id,
+            },
+            {
+              remitente_id: otroUsuario.id,
+              destinatario_id: req.session.usuario.id,
+            },
+          ],
+        },
+        include: [
+          {
+            model: UsuarioModel,
+            as: "remitente",
+            attributes: ["id", "nombre"],
+          },
+          {
+            model: Imagen, attributes: ['id', 'publicacion_id']
+          }
+        ],
+        order: [["fecha", "ASC"]],
+      });
+
+      //msj recibido -> msj leido
+      await MensajePrivado.update(
+        { leido: true },
+        {
+          where: {
+            remitente_id: otroUsuario.id,
+            destinatario_id: req.session.usuario.id,
+            leido: false,
+          },
+        },
+      );
+
+      res.render("conversacion", {
+        mensajes,
+        otroUsuario,
+        usuario: req.session.usuario,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Error al cargar conversacion");
+    }
+  },
+);
 
 // colecciones
 app.get("/colecciones", requiereAutenticacion, async (req, res) => {

@@ -21,7 +21,9 @@ block content
             |   #{seguidos}
           if esPropioPerfil 
             a.btn.btn-outline-primary(href="/perfil/editar") Editar Perfil 
-          else 
+          else
+            if !esPropioPerfil
+              a.btn.btn-outline-secondary.ms-2(href=`/mensajes/conversacion/${usuarioPerfil.id}`) Enviar Mensaje
             if yaSigo 
               form(action=`/dejar-de-seguir/${usuarioPerfil.id}` method="POST")
                 button.btn.btn-outline-danger(type="submit") Dejar de seguir

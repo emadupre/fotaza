@@ -3,19 +3,18 @@ extends layout.pug
 block content 
   h2 Mensajes 
 
-  if mensajes.length > 0
-    each msg in mensajes 
+  if conversaciones.length > 0
+    each conv in conversaciones
       .card.mb-2 
-        .card-body 
-          if msg.remitente_id === usuario.id 
-            p 
-              strong Para: #{msg.destinatario.nombre}
-          else 
-            p 
-              strong De: #{msg.remitente.nombre}
-          p.mb-1= msg.contenido 
-          small.text-muted= msg.fecha.toLocaleString()
-          if !msg.leido && msg.destinatario_id === usuario.id 
-            span.badge.bg-warning.ms-2 Nuevo 
-  else 
+        .card-body
+          .d-flex.justifiy-content-between 
+            div
+              h5= conv.usuario.nombre
+              p.mb-1= conv.ultimoMensaje.contenido.subString(0, 100) + '...' 
+              small.text-muted= conv.ultimoMensaje.fecha.toLocaleString()
+            .text-end
+              if conv.noLeidos > 0
+                span.badge.bg-danger= conv.noLeidos 
+              a.btn.btn-sm.btn-primary(href=`/mensajes/conversaciones/${conv.usuario.id}`) Ver chat
+  else
     .alert.alert-info No tienes mensajes.

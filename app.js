@@ -551,7 +551,7 @@ app.post("/valorar/:imagen_id", requiereAutenticacion, async (req, res) => {
 // marcar interes en una publicacion/imagen
 app.post("/me-interesa/:imagen_id", requiereAutenticacion, async (req, res) => {
   try {
-    const { Interes, Imagen, Notificacion, Publicacion } = require("./models");
+    const { Interes, Imagen, Notificacion, Publicacion, MensajePrivado } = require("./models");
     const imagen_id = req.params.imagen_id;
 
     const imagen = await Imagen.findByPk(imagen_id);

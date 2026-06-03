@@ -1,0 +1,23 @@
+extends layout.pug 
+
+block content 
+  h2 Mis colecciones 
+  if colecciones.length > 0
+    each col in colecciones 
+      h4= col.nombre
+      if col.Publicacions && col.Publicacions.length > 0
+        .row 
+          each pub in col.Publicacions
+            .col-md-4.mb-3 
+              .card 
+                if pub.Imagens && pub.Imagens.length > 0
+                  img.card-img-top(src=pub.Imagens[0].url alt=pub.titulo style="height:200px;object-fit:cover")
+                .card-body 
+                  h5.card-title= pub.titulo 
+                  a.btn.btn-sm.btn-primary(href=`/publicaciones/${pub.id}`) Ver detalle
+      else 
+        p No hay publicaciones en esta colección.
+  else
+    .alert.alert-info No tienes colecciones.
+
+  a.btn.btn-outline-secondary(href="/buscar") Buscar publicaciones para guardar

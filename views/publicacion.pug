@@ -52,6 +52,19 @@ block content
                     option(value="5") 5 
                   button.btn.btn-sm.btn-outline-warning(type="submit") Votar
               
+              // guardar coleccion
+              if usuario && !esAutor
+                form(action="/colecciones" method="POST" class="d-inline mb-2")
+                  input(type="hidden" name="publicacion_id" value=publicacion.id)
+                  .input-group.input-group-sm
+                    select.form-select(name="coleccion_id") //acá necesitamos pasar las colecciones que ya crea el usuario desde el get /publicaciones/:id
+                      option(value="") Nueva colección.. 
+                      if coleccionesUsuario
+                        each col in coleccionesUsuario
+                          option(value=col.id)= col.nombre
+                    input.form-control(type="text" name="nombre" placeholder="Nombre para la coleccion")
+                    button.btn.btn-outline-success(type='submit') Guardar
+
               //me interesa
               if usuario && !esAutor
                 form(action=`/me-interesa/${imagen.id}` method="POST" class="d-inline ms-2")

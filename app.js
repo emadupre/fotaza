@@ -815,15 +815,16 @@ app.get("/buscar", async (req, res) => {
     const includeImagen = {
       model: Imagen,
       required: false,
+      where: {},
     };
 
     if (licencia) {
-      includeImagen.where = includeImagen.where || {};
+      includeImagen.required = true;
       includeImagen.where.licencia = licencia;
     }
 
     if (valoracion_min) {
-      includeImagen.where = includeImagen.where || {};
+      includeImagen.required = true;
       includeImagen.where.promedio_valoracion = {
         [Op.gte]: parseFloat(valoracion_min),
       };

@@ -30,7 +30,7 @@ block content
               img.card-img-top(src=pub.Imagens[0].url alt=pub.titulo style="height:200px;object-fit:cover")
             .card-body
               h5.card-title= pub.titulo 
-              p.card-text= pub.descripcion ? pub.descripcion.substring(0,100) + '...' : ''
+              p.card-text= pub.descripcion ? pub.descripcion.substring(0,100) + '...' : '' 
               p 
                 strong Por: 
                 a(href=`/perfil/${pub.Usuario.id}`)= pub.Usuario.nombre 

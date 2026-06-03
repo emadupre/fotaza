@@ -2,23 +2,57 @@ extends layout.pug
 
 block content
   if usuario 
-    h2 Inicio 
-    if publicaciones && publicaciones.length > 0
+    h2 Inicio
+
+    if publicacionesSeguidos && publicacionesSeguidos.length > 0
+      h3.mt-4 De tus seguidos
       .row 
-        each pub in publicaciones 
+        each pub in publicacionesSeguidos
           .col-md-4.mb-3 
             .card 
               if pub.Imagens && pub.Imagens.length > 0
-                img.card-img-top(src=pub.Imagens[0].url alt=pub.titulo style="heigth:200px;object-fit:cover")
+                img.card-img-top(src=pub.Imagens[0].url alt=pub.titulo style="height:200px;object-fit:cover")
               .card-body 
                 h5.card-title= pub.titulo 
                 p 
                   strong Por: 
                   a(href=`/perfil/${pub.Usuario.id}`)= pub.Usuario.nombre 
-                a.btn.btn-sm.btn-primary(href=`/publicaciones/${pub.id}`) Ver detalle 
+                a.btn.btn-sm.btn-primary(href=`/publicaciones/${pub.id}`) Ver detalle
     else 
       .alert.alert-info No sigues a ningun usuario o no han publicado nada.
       a.btn.btn-outline-secondary(href="/buscar") Descubrir contenido de las otros usuarios
+
+    if publicacionesPopulares && publicacionesPopulares.length > 0
+      h3.mt-4 Populares
+      .row 
+        each pub in publicacionesPopulares
+          .col-md-4.mb-3 
+            .card 
+              if pub.Imagens && pub.Imagens.length > 0
+                img.card-img-top(src=pub.Imagens[0].url alt=pub.titulo style="height:200px;object-fit:cover")
+              .card-body 
+                h5.card-title= pub.titulo 
+                p 
+                  strong Por: 
+                  a(href=`/perfil/${pub.Usuario.id}`)= pub.Usuario.nombre 
+                a.btn.btn-sm.btn-primary(href=`/publicaciones/${pub.id}`) Ver detalle
+
+    if publicacionesRecientes && publicacionesRecientes.length > 0
+      h3.mt-4 Recientes
+      .row 
+        each pub in publicacionesRecientes
+          .col-md-4.mb-3 
+            .card 
+              if pub.Imagens && pub.Imagens.length > 0
+                img.card-img-top(src=pub.Imagens[0].url alt=pub.titulo style="height:200px;object-fit:cover")
+              .card-body 
+                h5.card-title= pub.titulo 
+                p 
+                  strong Por: 
+                  a(href=`/perfil/${pub.Usuario.id}`)= pub.Usuario.nombre
+                p 
+                  small.text-muted Publicado el #{pub.fecha_creacion.toLocaleDateString()} 
+                a.btn.btn-sm.btn-primary(href=`/publicaciones/${pub.id}`) Ver detalle
   else 
     .text-center 
       h1 Bienvenido a Fotaza 

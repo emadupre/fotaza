@@ -93,14 +93,19 @@ async function crearMarcaAgua(texto) {
 // rutas
 
 //correcion del home.
-app.get('/', async (req, res) => {
+app.get("/", async (req, res) => {
   // si el usuario no esta logueado tieen que mostrar la home normal hasta ahora
   if (!req.session.usuario) {
     return res.render("home");
   }
 
   try {
-    const { Seguimiento, Publicacion, Imagen, Usuario: UsuarioModel } = require('./models');
+    const {
+      Seguimiento,
+      Publicacion,
+      Imagen,
+      Usuario: UsuarioModel,
+    } = require("./models");
     const Op = require("sequelize").Op;
 
     //obtener los id de usuarios seguidos
@@ -109,12 +114,13 @@ app.get('/', async (req, res) => {
       attributes: ["seguido_id"],
     });
 
-    const idsSeguidos = seguidos.map(s => s.seguido_id);
+    const idsSeguidos = seguidos.map((s) => s.seguido_id);
 
-    let publicaciones = [];
+    // publicaciones de seguidos
+    let publicacionesSeguidos = [];
 
     if (idsSeguidos.length > 0) {
-      publicaciones = await Publicacion.findAll({
+      publicacionesSeguidos = await Publicacion.findAll({
         where: {
           usuario_id: { [Op.in]: idsSeguidos },
           estado: { [Op.ne]: "baja" },
@@ -124,13 +130,55 @@ app.get('/', async (req, res) => {
           { model: UsuarioModel, attributes: ["id", "nombre"] },
         ],
         order: [["fecha_creacion", "DESC"]],
-        limit: 20,
+        limit: 15,
       });
     }
-    
+
+    // publicaciones populares, las mayores o iguales a 4 y minimo con 10 votos.
+    const publicacionesPopulares = await Publicacion.findAll({
+      where: {
+        estado: { [Op.ne]: "baja" },
+        ...(idsSeguidos.length > 0
+          ? { usuario_id: { [Op.notIn]: idsSeguidos } }
+          : {}),
+      },
+      include: [
+        {
+          model: Imagen,
+          where: {
+            promedio_valoracion: { [Op.gte]: 4.0 },
+            total_votos: { [Op.gte]: 10 },
+          },
+        },
+        { model: UsuarioModel, attributes: ["id", "nombre"] },
+      ],
+      order: [["fecha_creacion", "DESC"]],
+      limit: 10,
+    });
+
+    // publicaciones más actuales de usuarios que no sigo
+    const hace48h = new Date(Date.now() - 48 * 60 * 60 * 1000);
+    const publicacionesRecientes = await Publicacion.findAll({
+      where: {
+        estado: { [Op.ne]: "baja" },
+        fecha_creacion: { [Op.gte]: hace48h },
+        ...(idsSeguidos.length > 0
+          ? { usuario_id: { [Op.notIn]: idsSeguidos } }
+          : {}),
+      },
+      include: [
+        { model: Imagen },
+        { model: UsuarioModel, attributes: ["id", "nombre"] },
+      ],
+      order: [["fecha_creacion", "DESC"]],
+      limit: 10,
+    });
+
     res.render("home", {
       usuario: req.session.usuario,
-      publicaciones, // la view home.pug lo va usar
+      publicacionesSeguidos,
+      publicacionesPopulares,
+      publicacionesRecientes,
     });
   } catch (error) {
     console.error(error);

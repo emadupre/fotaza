@@ -551,7 +551,13 @@ app.post("/valorar/:imagen_id", requiereAutenticacion, async (req, res) => {
 // marcar interes en una publicacion/imagen
 app.post("/me-interesa/:imagen_id", requiereAutenticacion, async (req, res) => {
   try {
-    const { Interes, Imagen, Notificacion, Publicacion, MensajePrivado } = require("./models");
+    const {
+      Interes,
+      Imagen,
+      Notificacion,
+      Publicacion,
+      MensajePrivado,
+    } = require("./models");
     const imagen_id = req.params.imagen_id;
 
     const imagen = await Imagen.findByPk(imagen_id);
@@ -1164,7 +1170,7 @@ app.post("/mensajes/enviar", requiereAutenticacion, async (req, res) => {
       contenido,
     });
 
-    res.redirect("/mensajes/conversacion" + destinatario_id);
+    res.redirect("/mensajes/conversacion/" + destinatario_id);
   } catch (error) {
     console.error(error);
     res.status(500).send("Error al enviar");
@@ -1177,7 +1183,11 @@ app.get(
   requiereAutenticacion,
   async (req, res) => {
     try {
-      const { MensajePrivado, Usuario: UsuarioModel, Imagen } = require("./models");
+      const {
+        MensajePrivado,
+        Usuario: UsuarioModel,
+        Imagen,
+      } = require("./models");
       const Op = require("sequelize").Op;
 
       const otroUsuario = await UsuarioModel.findByPk(
@@ -1205,8 +1215,9 @@ app.get(
             attributes: ["id", "nombre"],
           },
           {
-            model: Imagen, attributes: ['id', 'publicacion_id']
-          }
+            model: Imagen,
+            attributes: ["id", "publicacion_id"],
+          },
         ],
         order: [["fecha", "ASC"]],
       });

@@ -5,7 +5,7 @@ block content
 
   if mensajes.length > 0
     each msg in mensajes 
-      .card.mb-2(class=(msg.remitente_id === usuario.id = 'border-primary' : 'border-secondary'))
+      .card.mb-2(class=(msg.remitente_id === usuario.id ? 'border-primary' : 'border-secondary'))
         .card-body
           .d-flex.justify-content-between 
             strong= msg.remitente_id === usuario.id ? 'Vos' : otroUsuario.nombre
@@ -15,10 +15,10 @@ block content
             a.btn.btn-sm.btn-outline-info.mt-2(href=`/publicaciones/${msg.Imagen.publicacion_id}`) Ver imagen
   else 
     .alert-alert-info No hay mensajes todavía
-  
+
   hr
   form(action="/mensajes/enviar" method="POST")
-    input(type="hidden", name="destinatario_id" value=otroUsuario.id)
+    input(type="hidden" name="destinatario_id" value=otroUsuario.id)
     .mb-3 
       label.form-label(for="contenido") Escribí un mensaje
       textarea#contenido.form-control(name="contenido" rows="3" required)

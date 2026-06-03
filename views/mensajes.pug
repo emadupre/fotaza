@@ -10,11 +10,11 @@ block content
           .d-flex.justifiy-content-between 
             div
               h5= conv.usuario.nombre
-              p.mb-1= conv.ultimoMensaje.contenido.subString(0, 100) + '...' 
+              p.mb-1= conv.ultimoMensaje.contenido.substring(0, 100) + '...' 
               small.text-muted= conv.ultimoMensaje.fecha.toLocaleString()
             .text-end
               if conv.noLeidos > 0
                 span.badge.bg-danger= conv.noLeidos 
-              a.btn.btn-sm.btn-primary(href=`/mensajes/conversaciones/${conv.usuario.id}`) Ver chat
+              a.btn.btn-sm.btn-primary(href=`/mensajes/conversacion/${conv.usuario.id}`) Ver chat
   else
     .alert.alert-info No tienes mensajes.

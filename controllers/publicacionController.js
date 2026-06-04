@@ -19,7 +19,7 @@ const sequelize = require("../config/database");
 const { Op } = require("sequelize");
 
 // form publicar
-exports.mostrarFormulario =  (req, res) => {
+exports.mostrarFormulario = (req, res) => {
   res.render("publicar");
 };
 
@@ -27,7 +27,8 @@ exports.mostrarFormulario =  (req, res) => {
 
 exports.crearPublicacion = async (req, res) => {
   try {
-    const { titulo, descripcion, etiquetas, licencia, marca_agua_texto } = req.body;
+    const { titulo, descripcion, etiquetas, licencia, marca_agua_texto } =
+      req.body;
     //creamos la publi
     const publicacion = await Publicacion.create({
       titulo,
@@ -115,7 +116,7 @@ exports.verPublicacion = async (req, res) => {
       include: [
         { model: Imagen },
         { model: Etiqueta },
-        { model: require('../models/Usuario'), attributes: ["id", "nombre"] },
+        { model: require("../models/Usuario"), attributes: ["id", "nombre"] },
       ],
     });
 
@@ -126,7 +127,9 @@ exports.verPublicacion = async (req, res) => {
     //comentarios
     const comentarios = await Comentario.findAll({
       where: { imagen_id: publicacion.Imagens[0]?.id, borrado: false },
-      include: [ { model: require("../models/Usuario"), attributes: ["id", "nombre"] } ],
+      include: [
+        { model: require("../models/Usuario"), attributes: ["id", "nombre"] },
+      ],
       order: [["fecha", "ASC"]],
     });
 
@@ -154,7 +157,7 @@ exports.verPublicacion = async (req, res) => {
 
 //comentar una imagen
 exports.comentar = async (req, res) => {
-  try{
+  try {
     const { texto } = req.body;
     const imagen_id = req.params.imagen_id;
 
@@ -297,8 +300,8 @@ exports.marcarInteres = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).send("Error al marcar interes");
-  }  
-}
+  }
+};
 
 // si soy autor cerrar comentarios
 exports.cerrarComentarios = async (req, res) => {
@@ -346,7 +349,7 @@ exports.borrarComentario = async (req, res) => {
 };
 
 //hacer denuncia de imagen
-exports.mostrarDenunciarImagen = (req, res) => {
+exports.mostrarDenunciarImagen = async (req, res) => {
   res.render("denunciar_imagen", { imagen_id: req.params.imagen_id });
 };
 
@@ -363,7 +366,7 @@ exports.procesarDenunciarImagen = async (req, res) => {
 
     //no se puede editar la imagen si tiene denuncias
     const imagen = await Imagen.findByPk(req.params.imagen_id);
-    res.redirect('/publicaciones/' + imagen.publicacion_id);
+    res.redirect("/publicaciones/" + imagen.publicacion_id);
   } catch (error) {
     console.error(error);
     res.status(500).send("Error al denunciar imagen");
@@ -371,29 +374,31 @@ exports.procesarDenunciarImagen = async (req, res) => {
 };
 
 // hacer denuncia de comentario
-exports.mostrarDenunciaComentario = (req, res) => {
-  res.render("denunciar_comentario", { comentario_id: req.params.comentario_id, });
+exports.mostrarDenunciaComentario = async (req, res) => {
+  res.render("denunciar_comentario", {
+    comentario_id: req.params.comentario_id,
+  });
 };
 
 // proceso la denuncia de comentario
-exports.procesarDenunciarComentario = (req, res) => {
+exports.procesarDenunciarComentario = async (req, res) => {
   try {
-      const { motivo, descripcion } = req.body;
+    const { motivo, descripcion } = req.body;
 
-      await DenunciaComentario.create({
-        motivo,
-        descripcion,
-        usuario_id: req.session.usuario.id,
-        comentario_id: req.params.comentario_id,
-      });
+    await DenunciaComentario.create({
+      motivo,
+      descripcion,
+      usuario_id: req.session.usuario.id,
+      comentario_id: req.params.comentario_id,
+    });
 
-      const comentario = await Comentario.findByPk(req.params.comentario_id);
-      const imagen = await Imagen.findByPk(comentario.imagen_id);
-      const publicacion = await Publicacion.findByPk(imagen.publicacion_id);
+    const comentario = await Comentario.findByPk(req.params.comentario_id);
+    const imagen = await Imagen.findByPk(comentario.imagen_id);
+    const publicacion = await Publicacion.findByPk(imagen.publicacion_id);
 
-      res.redirect("/publicaciones/" + publicacion.id);
-    } catch (error) {
-      console.error(error);
-      res.status(500).send("Error al denunciar comentario");
-    }
+    res.redirect("/publicaciones/" + publicacion.id);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error al denunciar comentario");
+  }
 };

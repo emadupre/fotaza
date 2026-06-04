@@ -24,7 +24,7 @@ exports.procesarLogin = async (req, res) => {
   res.redirect("/");
 };
 
-exports.mostrarRegistro = (req, res) => {
+exports.mostrarRegistro = async (req, res) => {
   res.render("registro");
 };
 
@@ -39,7 +39,7 @@ exports.procesarRegistro = async (req, res) => {
   }
 };
 
-exports.logout = (req, res) => {
+exports.logout = async (req, res) => {
   req.session.destroy();
   res.redirect("/");
 };

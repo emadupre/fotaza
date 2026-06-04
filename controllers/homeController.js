@@ -8,11 +8,12 @@ exports.home = async (req, res) => {
   }
   try {
     const seguidos = await Seguimiento.findAll({
-      where: { seguido_id: req.session.usuario.id },
+      where: { seguidor_id: req.session.usuario.id },
       attributes: ["seguido_id"],
     });
-    const idsSeguidos = seguidos.map((s) => s.seguido_id);
-    // publicaciones de seguidos
+    let idsSeguidos = seguidos.map((s) => s.seguido_id);
+    // publicaciones de seguidos y excluimos el propio ID
+    idsSeguidos = idsSeguidos.filter((id) => id !== req.session.usuario.id);
     let publicacionesSeguidos = [];
 
     if (idsSeguidos.length > 0) {

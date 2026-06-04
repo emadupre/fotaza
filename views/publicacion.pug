@@ -64,7 +64,7 @@ block content
                       if coleccionesUsuario
                         each col in coleccionesUsuario
                           option(value=col.id)= col.nombre
-                    input.form-control(type="text" name="nombre" placeholder="Nombre para la coleccion")
+                    input.form-control(type="text" name="nombre" placeholder="Nombre para la coleccion" required)
                     button.btn.btn-outline-success(type='submit') Guardar
 
               //me interesa
@@ -112,3 +112,26 @@ block content
                   a.btn.btn-sm.btn-outline-danger.ms-1(href=`/denunciar/comentario/${comentario.id}`) Denunciar
         else 
           p No hay comentarios aun.
+
+  script.
+    document.addEventListener('DOMContentLoaded', function(){
+      const selectColeccion = document.querySelector('select[name="coleccion_id"]');
+      const inputNombre = document.querySelector('input[name="nombre"]');
+
+      if(selectColeccion && inputNombre) {
+        //funcion para ocultar
+        function toggleNombreInput(){
+          if(selectColeccion.value){
+            inputNombre.style.display = 'none';
+            inputNombre.removeAttribute('required'); // quita el required si estaba
+          } else {
+            inputNombre.style.display = 'block';
+            inputNombre.setAttribute('required'); // pone el required al crear una nueva
+          }
+        }
+
+        //ejecutar al cambiar y al cargar la pagina
+        selectColeccion.addEventListener('change', toggleNombreInput);
+        toggleNombreInput(); // estado inicial
+      }
+    });

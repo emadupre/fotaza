@@ -17,14 +17,16 @@ exports.buscar = async (req, res) => {
     }
 
     if (usuario) {
-      const usuarioEncontrado = await UsuarioModel.findOne({
+      const usuarioEncontrado = await Usuario.findOne({
         where: { nombre: { [Op.iLike]: `%${usuario}` } },
       });
-      if (usuarioEncontrado) {
+      if (usuarioEncontrado && usuarioEncontrado.id !== req.session.usuario?.id) {
         where.usuario_id = usuarioEncontrado.id;
       } else {
         where.usuario_id = -1; // esto es sin resultados
       }
+    } else if (req.session.usuario) {
+      where.usuario_id = { [Op.ne]: req.session.usuario.id };
     }
 
     // esto lo pense para filtrar por licencia y valoracion

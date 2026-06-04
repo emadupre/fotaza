@@ -3,7 +3,9 @@ extends layout.pug
 block content 
   .row 
     .col-md-8 
-      h2= publicacion.titulo 
+      h2= publicacion.titulo
+      if esAutor && publicacion.estado !== 'en_revision'
+        a.btn.btn-sm.btn-outline-secondary(href=`/publicaciones/${publicacion.id}/editar`) Editar
       p.text-muted 
         | Por 
         a(href=`/perfil/${publicacion.Usuario.id}`)= publicacion.Usuario.nombre 
@@ -16,7 +18,7 @@ block content
         p 
           each etiqueta in publicacion.Etiqueta 
             span.badge.bg-secondary.me-1= etiqueta.nombre 
-      
+
       hr
 
       //mostrarImagenes
@@ -29,7 +31,7 @@ block content
               p 
                 strong Licencia: 
                 | #{imagen.licencia === 'con_copyright' ? 'Con Copyright': 'Sin Copyright'}
-              
+
               if imagen.marca_agua_texto 
                 p 
                   strong Marca de agua: 
@@ -40,7 +42,7 @@ block content
                 strong Valoracion: 
                 | #{Number(imagen.promedio_valoracion).toFixed(1)} / 5
                 | (#{imagen.total_votos} votos)
-              
+
               if usuario && !esAutor
                 form(action=`/valorar/${imagen.id}` method="POST" class="d-inline")
                   select(name="puntuacion" class="form-select d-inline w-auto")  
@@ -51,7 +53,7 @@ block content
                     option(value="4") 4
                     option(value="5") 5 
                   button.btn.btn-sm.btn-outline-warning(type="submit") Votar
-              
+
               // guardar coleccion
               if usuario && !esAutor
                 form(action="/colecciones" method="POST" class="d-inline mb-2")
@@ -69,7 +71,7 @@ block content
               if usuario && !esAutor
                 form(action=`/me-interesa/${imagen.id}` method="POST" class="d-inline ms-2")
                   button.btn.btn-sm.btn-outline-info(type="submit") Me interesa 
-              
+
               //denunciar imagen
               if usuario && !esAutor
                 a.btn.btn-sm.btn-outline-danger.ms-2(href=`/denunciar/imagen/${imagen.id}`) Denunciar 
@@ -92,7 +94,7 @@ block content
             .mb-3 
               textarea.form-control(name="texto" rows="3" placeholder="Escribe un comentario.." required)
             button.btn.btn-primary.btn-sm(type="submit") Comentar 
-        
+
         if imagen.comentarios_cerrados 
           .alert.alert-warning Los comentarios están cerrados.
 

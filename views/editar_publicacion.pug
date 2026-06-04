@@ -1,0 +1,17 @@
+extends layout.pug 
+
+block content 
+  h2 Editar publicacion 
+  form(action="/publicaciones/" + publicacion.id + "/editar" method="POST")
+    .mb-3 
+      label.form-label(for="titulo") Titulo
+      input#titulo.form-control(type="text" name="titulo" value=publicacion.titulo required)
+    .mb-3 
+      label.form-label(for="descripcion") Descripcion 
+      textarea#descripcion.form-control(name="descripcion" rows="3")= publicacion.descripcion || '' 
+    .mb-3
+      label.form-label(for="etiquetas") Etiquetas (separadas por comas)
+      - var etiquetasNombres = publicacion.Etiqueta ? publicacion.Etiqueta.map(e => e.nombre).join(', ') : '' 
+      input#etiquetas.form-control(type="text" name="etiquetas" value=etiquetasNombres)
+    button.btn.btn-primary(type='submit') Guardar cambios 
+    a.btn.btn-secondary.ms-2(href="/publicaciones/" + publicacion.id) Cancelar

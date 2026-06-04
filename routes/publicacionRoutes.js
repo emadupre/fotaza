@@ -31,4 +31,8 @@ router.post('/denunciar/imagen/:imagen_id', requiereAutenticacion, publicacionCo
 router.get('/denunciar/comentario/:comentario_id', requiereAutenticacion, publicacionController.mostrarDenunciaComentario);
 router.post('/denunciar/comentario/:comentario_id', requiereAutenticacion, publicacionController.procesarDenunciarComentario);
 
+//edicion de publicacion
+router.get('/publicaciones/:id/editar', requiereAutenticacion, publicacionController.mostrarEditarPublicacion);
+router.post('/publicaciones/:id/editar', requiereAutenticacion, publicacionController.editarPublicacion);
+
 module.exports = router;

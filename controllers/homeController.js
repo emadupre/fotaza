@@ -23,7 +23,7 @@ exports.home = async (req, res) => {
         },
         include: [
           { model: Imagen },
-          { model: UsuarioModel, attributes: ["id", "nombre"] },
+          { model: Usuario, attributes: ["id", "nombre"] },
         ],
         order: [["fecha_creacion", "DESC"]],
         limit: 15,
@@ -46,7 +46,7 @@ exports.home = async (req, res) => {
             total_votos: { [Op.gte]: 10 },
           },
         },
-        { model: UsuarioModel, attributes: ["id", "nombre"] },
+        { model: Usuario, attributes: ["id", "nombre"] },
       ],
       order: [["fecha_creacion", "DESC"]],
       limit: 10,
@@ -64,7 +64,7 @@ exports.home = async (req, res) => {
       },
       include: [
         { model: Imagen },
-        { model: UsuarioModel, attributes: ["id", "nombre"] },
+        { model: Usuario, attributes: ["id", "nombre"] },
       ],
       order: [["fecha_creacion", "DESC"]],
       limit: 10,

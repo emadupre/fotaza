@@ -7,7 +7,7 @@ exports.mostrarLogin = (req, res) => {
 
 exports.procesarLogin = async (req, res) => {
   const { email, password } = req.body;
-  const usuario = await Usuario.findOne({ where: email });
+  const usuario = await Usuario.findOne({ where: { email } });
 
   if (!usuario || !usuario.cuenta_activa) {
     return res.send("Usuario no encontrado");

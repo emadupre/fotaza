@@ -402,3 +402,86 @@ exports.procesarDenunciarComentario = async (req, res) => {
     res.status(500).send("Error al denunciar comentario");
   }
 };
+
+//editar la publi
+exports.mostrarEditarPublicacion = async (req, res) => {
+  try {
+    const publicacion = await Publicacion.findByPk(req.params.id, {
+      include: [{ model: Imagen }, { model: Etiqueta }],
+    });
+
+    if (!publicacion) return res.status(404).send("Publicacion no encontrada");
+    if (publicacion.usuario_id !== req.session.usuario.id) {
+      return res.status(403).send("No sos el autor");
+    }
+
+    //verificamos si alguna de las imagenes tiene denuncias/reportes
+    const idsImagenes = publicacion.Imagens.map((img) => img.id);
+    const denuncias = await DenunciaImagen.count({
+      where: { imagen_id: idsImagenes },
+    });
+
+    if (denuncias > 0) {
+      return res
+        .status(403)
+        .send("No se puede editar, la publicacion tiene denuncias");
+    }
+
+    res.render("editar_publicacion", { publicacion });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error al cargar");
+  }
+};
+
+exports.editarPublicacion = async (req, res) => {
+  try {
+    const publicacion = await Publicacion.findByPk(req.params.id, {
+      include: [Imagen],
+    });
+
+    if (!publicacion) return res.status(404).send("No encontrada");
+    if (publicacion.usuario_id !== req.session.usuario.id)
+      return res.status(403).send("No autorizado");
+
+    // chequear las denuncias
+    const idsImagenes = publicacion.Imagens.map((img) => img.id);
+    const denuncias = await DenunciaImagen.count({
+      where: { imagen_id: idsImagenes },
+    });
+    if (denuncias > 0)
+      return res.status(403).send("No puedes editar, el post tiene denuncias");
+
+    const { titulo, descripcion, etiquetas } = req.body;
+    await publicacion.update({ titulo, descripcion });
+
+    //actualizamos las etiquetas
+    await PublicacionEtiqueta.destroy({
+      where: { publicacion_id: publicacion.id },
+    });
+
+    if (etiquetas) {
+      const nombres = etiquetas
+        .split(",")
+        .map((e) => e.trim())
+        .filter((e) => e);
+      for (const nombre of nombres) {
+        const [etiqueta] = await Etiqueta.findOrCreate({ where: { nombre } });
+        if (etiqueta) {
+          // solo si se obtuvo o se creo correctamente
+          await PublicacionEtiqueta.create({
+            publicacion_id: publicacion.id,
+            etiqueta_id: etiqueta.id,
+          }).catch((err) => {
+            if (err.name !== "SequelizeUniqueConstraintError") throw err;
+          });
+        }
+      }
+    }
+
+    res.redirect("/publicaciones/" + publicacion.id);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error al editar");
+  }
+};

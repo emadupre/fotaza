@@ -349,7 +349,7 @@ exports.borrarComentario = async (req, res) => {
 };
 
 //hacer denuncia de imagen
-exports.mostrarDenunciarImagen = async (req, res) => {
+exports.mostrarDenunciarImagen = (req, res) => {
   res.render("denunciar_imagen", { imagen_id: req.params.imagen_id });
 };
 

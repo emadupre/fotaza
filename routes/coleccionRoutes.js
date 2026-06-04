@@ -3,7 +3,7 @@ const router = express.Router();
 const coleccionController = require('../controllers/coleccionController');
 const { requireAutenticacion, requiereAutenticacion } = require('../middlewares/auth');
 
-router.get('/colecciones', requireAutenticacion, coleccionController.listarColecciones);
+router.get('/colecciones', requiereAutenticacion, coleccionController.listarColecciones);
 router.post('/colecciones', requiereAutenticacion, coleccionController.guardarEnColeccion);
 
 module.exports = router;

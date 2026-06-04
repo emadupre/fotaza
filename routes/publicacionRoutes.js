@@ -28,7 +28,7 @@ router.get('/denunciar/imagen/:imagen_id', requiereAutenticacion, publicacionCon
 router.post('/denunciar/imagen/:imagen_id', requiereAutenticacion, publicacionController.procesarDenunciarImagen);
 
 // denuncias comentario
-router.get('/denunciar/comentario/:comentario_id', requiereAutenticacion, publicacionController.mostrarDenunciarComentario);
+router.get('/denunciar/comentario/:comentario_id', requiereAutenticacion, publicacionController.mostrarDenunciaComentario);
 router.post('/denunciar/comentario/:comentario_id', requiereAutenticacion, publicacionController.procesarDenunciarComentario);
 
 module.exports = router;

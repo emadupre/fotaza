@@ -43,7 +43,7 @@ app.use("/", require("./routes/busquedaRoutes"));
 app.use("/", require("./routes/validadorRoutes"));
 app.use("/", require("./routes/notificacionRoutes"));
 app.use("/", require("./routes/mensajeRoutes"));
-app.use("/".require("./routes/coleccionRoutes"));
+app.use("/", require("./routes/coleccionRoutes"));
 
 //sync bd y arrancar el servidor
 const PORT = process.env.PORT || 3001;

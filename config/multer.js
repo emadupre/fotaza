@@ -1,5 +1,5 @@
-const multer = require('multer');
-const path = require('path');
+const multer = require("multer");
+const path = require("path");
 
 //config para el multer y que guarde las imagenes en ->/uploads
 const storage = multer.diskStorage({
@@ -28,4 +28,4 @@ const uploads = multer({
   },
 });
 
-module.exports = upload;
+module.exports = uploads;

@@ -2,116 +2,143 @@ extends layout.pug
 
 block content 
   .row 
-    .col-md-8 
-      h2= publicacion.titulo
-      if esAutor && publicacion.estado !== 'en_revision'
-        a.btn.btn-sm.btn-outline-secondary(href=`/publicaciones/${publicacion.id}/editar`) Editar
-      p.text-muted 
-        | Por 
-        a(href=`/perfil/${publicacion.Usuario.id}`)= publicacion.Usuario.nombre 
-        | - #{publicacion.fecha_creacion.toLocaleDateString()} 
-
-      if publicacion.descripcion 
-        p= publicacion.descripcion 
-
-      if publicacion.Etiqueta && publicacion.Etiqueta.length > 0
-        p 
-          each etiqueta in publicacion.Etiqueta 
-            span.badge.bg-secondary.me-1= etiqueta.nombre 
-
-      hr
-
-      //mostrarImagenes
-
+    .col-lg-8 
       if publicacion.Imagens && publicacion.Imagens.length > 0
         each imagen in publicacion.Imagens
-          .card.mb-3 
-            img.card-img-top(src=imagen.url alt=publicacion.titulo)
-            .card-body 
-              p 
+          .card.mb-4.shadow-sm 
+            img.card-img-top(src=imagen.url alt=publicacion.titulo style="max-height:500px;object-fit:contain;background:#000")
+            .card-body
+              .d-flex.flex-wrap.gap-2.mb-3
+                if usuario && !esAutor
+                  form(action=`/valorar/${imagen.id}` method="POST" class="d-flex align-items-center gap-1")
+                    select.form-select.form-select-sm(name="puntuacion" class="width:auto")
+                      option(value="") Tu voto..
+                      option(value="1") ⭐1
+                      option(value="2") ⭐⭐2
+                      option(value="3") ⭐⭐⭐3
+                      option(value="4") ⭐⭐⭐⭐4
+                      option(value="5") ⭐⭐⭐⭐⭐5 
+                    button.btn.btn-sm.btn-outline-warning(type="submit") Votar
+                // me interesa
+                if usuario && !esAutor
+                  form(action=`/me-interesa/${imagen.id}` method="POST")
+                    button.btn.btn-sm.btn-outline-info(type="submit")
+                      i.bi.bi-heart.me-1
+                      | Me interesa
+
+                //denunciar imagen
+                if usuario && !esAutor
+                  a.btn.btn-sm.btn-outline-danger(href=`/denunciar/imagen/${imagen.id}`)
+                    i.bi.bi-flag.me-1 
+                    | Denunciar
+
+                //cerrar comentarios (si es el autor del post)
+                if esAutor 
+                  form(action=`/cerrar-comentarios/${imagen.id}` method="POST")
+                    if imagen.comentarios_cerrados 
+                      button.btn.btn-sm.btn-outline-success(type="submit")
+                        i.bi.bi-unlock.me-1 
+                        | Reabrir comentarios
+                    else
+                      button.btn.btn-sm.btn-outline-warning(type="submit")
+                        i.bi.bi-lock.me-1
+                        | Cerrar comentarios
+
+              //licencia
+              p.mb-1
                 strong Licencia: 
                 | #{imagen.licencia === 'con_copyright' ? 'Con Copyright': 'Sin Copyright'}
 
               if imagen.marca_agua_texto 
-                p 
+                p.mb-1 
                   strong Marca de agua: 
                   | #{imagen.marca_agua_texto}
 
               //valoracion
-              p 
-                strong Valoracion: 
-                | #{Number(imagen.promedio_valoracion).toFixed(1)} / 5
-                | (#{imagen.total_votos} votos)
+              .d-flex.align-items-center.gap-2.mt-2
+                strong Valoracion:
+                span.text-warning.fs-5 ★ #{Number(imagen.promedio_valoracion).toFixed(1)}
+                small.text-muted (#{imagen.total_votos} votos)
 
-              if usuario && !esAutor
-                form(action=`/valorar/${imagen.id}` method="POST" class="d-inline")
-                  select(name="puntuacion" class="form-select d-inline w-auto")  
-                    option(value="") Tu voto..
-                    option(value="1") 1
-                    option(value="2") 2
-                    option(value="3") 3
-                    option(value="4") 4
-                    option(value="5") 5 
-                  button.btn.btn-sm.btn-outline-warning(type="submit") Votar
-
-              // guardar coleccion
-              if usuario && !esAutor
-                form(action="/colecciones" method="POST" class="d-inline mb-2")
-                  input(type="hidden" name="publicacion_id" value=publicacion.id)
-                  .input-group.input-group-sm
-                    select.form-select(name="coleccion_id") //acá necesitamos pasar las colecciones que ya crea el usuario desde el get /publicaciones/:id
+        if usuario && !esAutor
+          .card.mb-4.shadow-sm
+            .card-body              
+              form(action="/colecciones" method="POST")
+                input(type="hidden" name="publicacion_id" value=publicacion.id)
+                .row.g-2.align-items-end
+                  .col-auto
+                    select.form-select.form-select-sm(name="coleccion_id") //acá necesitamos pasar las colecciones que ya crea el usuario desde el get /publicaciones/:id
                       option(value="") Nueva colección.. 
                       if coleccionesUsuario
                         each col in coleccionesUsuario
                           option(value=col.id)= col.nombre
-                    input.form-control(type="text" name="nombre" placeholder="Nombre para la coleccion" required)
-                    button.btn.btn-outline-success(type='submit') Guardar
+                  .col
+                    input.form-control.form-control-sm(type="text" name="nombre" placeholder="Nombre para la coleccion" style="width:100%")
+                  .col-auto
+                    button.btn.btn-outline-success(type='submit')
+                      i.bi.bi-bookmark-plus.me-1
+                      | Guardar
 
-              //me interesa
-              if usuario && !esAutor
-                form(action=`/me-interesa/${imagen.id}` method="POST" class="d-inline ms-2")
-                  button.btn.btn-sm.btn-outline-info(type="submit") Me interesa 
 
-              //denunciar imagen
-              if usuario && !esAutor
-                a.btn.btn-sm.btn-outline-danger.ms-2(href=`/denunciar/imagen/${imagen.id}`) Denunciar 
+      else 
+        .alert.alert-info Esta publicacion no tiene una imagen.
 
-              //cerrar comentarios (si es el autor del post)
-              if esAutor 
-                form(action=`/cerrar-comentarios/${imagen.id}` method="POST" class="d-inline")
-                  if imagen.comentarios_cerrados 
-                    button.btn.btn-sm.btn-outline-success(type="submit") Reabrir comentarios 
-                  else 
-                    button.btn.btn-sm.btn-outline-warning(type="submit") Cerrar comentarios
+    .col-lg-4
+      //titulo y datos
+      h2= publicacion.titulo 
+      p.text-muted
+        | Por 
+        a(href=`/perfil/${publicacion.Usuario.id}`)= publicacion.Usuario.nombre
+        |   #{publicacion.fecha_creacion.toLocaleDateString()}
 
-    .col-md-4 
-      if publicacion.Imagens && publicacion.Imagens.length > 0
-        - var imagen = publicacion.Imagens[0]
-        h4 Comentarios
+      if esAutor && publicacion.estado !== 'en_revision'
+        a.btn.btn-sm.btn-outline-secondary.mb-3(href=`/publicaciones/${publicacion.id}/editar`)
+          i.bi.bi-pencil.me-1 
+          | Editar
 
-        if !imagen.comentarios_cerrados && usuario 
-          form(action=`/comentar/${imagen.id}` method="POST")
-            .mb-3 
-              textarea.form-control(name="texto" rows="3" placeholder="Escribe un comentario.." required)
-            button.btn.btn-primary.btn-sm(type="submit") Comentar 
+      if publicacion.descripcion
+        p= publicacion.descripcion
 
-        if imagen.comentarios_cerrados 
-          .alert.alert-warning Los comentarios están cerrados.
+      //etiquetas
+      if publicacion.Etiqueta && publicacion.Etiqueta.length > 0
+        .mb-3
+          each etiqueta in publicacion.Etiqueta
+            span.badge.bg-secondary.me-1= etiqueta.nombre
 
-        if comentarios && comentarios.length > 0
-          each comentario in comentarios 
-            .card.mb-2 
-              .card-body 
-                strong= comentario.Usuario.nombre 
-                p.mb-1= comentario.texto 
-                small.text-muted= comentario.fecha.toLocaleDateString()
-                if usuario && esAutor && !comentario.borrado
-                  form(action=`/borrar-comentario/${comentario.id}` method="POST" class="mt-1")
-                    button.btn.btn-sm.btn-outline-danger(type="submit") Borrar
-                if usuario && !esAutor
-                  a.btn.btn-sm.btn-outline-danger.ms-1(href=`/denunciar/comentario/${comentario.id}`) Denunciar
-        else 
-          p No hay comentarios aun.
+      hr
+
+      //comentarios
+      h4 Comentarios
+
+      if publicacion.Imagens && publicacion.Imagens.length > 0 && !publicacion.Imagens[0].comentarios_cerrados && usuario
+        form(action=`/comentar/${publicacion.Imagens[0].id}` method="POST" class="mb-3")
+          textarea.form-control.mb-2(name="texto" rows="2" placeholder="Escribe un comentario..." required)
+          button.btn.btn-primary.btn-sm(type="submit")
+            i.bi.bi-chat-dots.me-1
+            | Comentar
+
+      if publicacion.Imagens && publicacion.Imagens.length > 0 && publicacion.Imagens[0].comentarios_cerrados && usuario
+        .alert.alert-warning Los comentarios están cerrados.
+
+      if comentarios && comentarios.length > 0
+        each comentario in comentarios
+          .card.mb-2.shadow-sm
+            .card-body.py-2
+              .d-flex.justify-content-between
+                div
+                  strong= comentario.Usuario.nombre
+                  p.mb-1= comentario.texto
+                  small.text-muted= comentario.fecha.toLocaleDateString()
+                div
+                  if usuario && !esAutor && !comentario.borrado
+                    a.btn.btn-sm.btn-outline-danger(href=`/denunciar/comentario/${comentario.id}`)
+                      i.bi.bi-flag
+                  if usuario && esAutor && !comentario.borrado
+                    form(action=`/borrar-comentario/${comentario.id}` method="POST")
+                      button.btn.btn-sm.btn-outline-danger(type="submit")
+                        i.bi.bi-trash
+      else
+        p No hay comentarios aún.
 
   script.
     document.addEventListener('DOMContentLoaded', function(){

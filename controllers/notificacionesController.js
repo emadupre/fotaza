@@ -1,13 +1,11 @@
-const { Notificacion, Usuario } = require('../models');
+const { Notificacion, Usuario } = require("../models");
 
 // notificaciones del usuario
 exports.listar = async (req, res) => {
   try {
     const notificaciones = await Notificacion.findAll({
       where: { usuario_id: req.session.usuario.id },
-      include: [
-        { model: UsuarioModel, as: "actor", attributes: ["id", "nombre"] },
-      ],
+      include: [{ model: Usuario, as: "actor", attributes: ["id", "nombre"] }],
       order: [["fecha", "DESC"]],
       limit: 50,
     });
@@ -25,8 +23,8 @@ exports.listar = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).send("Error al cargar las notificaciones del usuario");
-  }  
-}
+  }
+};
 
 //marcamos como leida la notificaciones
 exports.marcarLeida = async (req, res) => {

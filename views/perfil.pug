@@ -19,11 +19,8 @@ block content
           p 
             strong Siguiendo: 
             |   #{seguidos}
-          if esPropioPerfil 
-            a.btn.btn-outline-primary(href="/perfil/editar") Editar Perfil 
-          else
-            if !esPropioPerfil
-              a.btn.btn-outline-secondary.ms-2(href=`/mensajes/conversacion/${usuarioPerfil.id}`) Enviar Mensaje
+          if !esPropioPerfil
+            a.btn.btn-outline-secondary.ms-2(href=`/mensajes/conversacion/${usuarioPerfil.id}`) Enviar Mensaje
             if yaSigo 
               form(action=`/dejar-de-seguir/${usuarioPerfil.id}` method="POST")
                 button.btn.btn-outline-danger(type="submit") Dejar de seguir
@@ -36,7 +33,9 @@ block content
         .row
           each pub in publicaciones 
             .col-md-6.mb-3 
-              .card 
+              .card
+                if pub.Imagens && pub.Imagens.length > 0
+                  img.card-img-top(src=pub.Imagens[0].url alt=pub.titulo style="heigth:200px;object-fit:cover")  
                 .card-body 
                   h5= pub.titulo 
                   p.text-muted= pub.fecha_creacion 

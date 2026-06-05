@@ -1,7 +1,7 @@
 // panel validador
-const { Publicacion, Imagen, DenunciaImagen, Usuario } = require('../models');
-const sequelize = require('../config/database');
-const { Op } = require('sequelize');
+const { Publicacion, Imagen, DenunciaImagen, Usuario } = require("../models");
+const sequelize = require("../config/database");
+const { Op } = require("sequelize");
 //panel de validador
 exports.panel = async (req, res) => {
   try {
@@ -55,48 +55,44 @@ exports.panel = async (req, res) => {
 // dar de baja la publicacion en su totalidad
 exports.bajarPublicacion = async (req, res) => {
   try {
-      const publicacion = await Publicacion.findByPk(req.params.publicacion_id);
+    const publicacion = await Publicacion.findByPk(req.params.publicacion_id);
 
-      if (!publicacion || publicacion.estado === "baja") {
-        return res
-          .status(404)
-          .send("Publicacion no encontrada o ya tiene la baja.");
-      }
-
-      // cambiar estado de la publicacion
-      await publicacion.update({ estado: "baja" });
-
-      // verificar si el autor tiene 3 publicaciones bajas para inhabilitarla.
-      const bajas = await Publicacion.count({
-        where: { usuario_id: publicacion.usuario_id, estado: "baja" },
-      });
-
-      if (bajas >= 3) {
-        await UsuarioModel.update(
-          { cuenta_activa: false },
-          { where: { id: publicacion.usuario_id } },
-        );
-      }
-
-      res.redirect("/validador");
-    } catch (error) {
-      console.error(error);
-      res.status(500).send("Error al dar de baja");
+    if (!publicacion || publicacion.estado === "baja") {
+      return res
+        .status(404)
+        .send("Publicacion no encontrada o ya tiene la baja.");
     }
+
+    // cambiar estado de la publicacion
+    await publicacion.update({ estado: "baja" });
+
+    // verificar si el autor tiene 3 publicaciones bajas para inhabilitarla.
+    const bajas = await Publicacion.count({
+      where: { usuario_id: publicacion.usuario_id, estado: "baja" },
+    });
+
+    if (bajas >= 3) {
+      await Usuario.update(
+        { cuenta_activa: false },
+        { where: { id: publicacion.usuario_id } },
+      );
+    }
+
+    res.redirect("/validador");
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error al dar de baja");
+  }
 };
 
 // desestimar las denuncias de una publicacion por si es errado
 exports.desestimarDenuncias = async (req, res) => {
   try {
-    const publicacion = await Publicacion.findByPk(
-      req.params.publicacion_id,
-      {
-        include: [{ model: Imagen }],
-      },
-    );
+    const publicacion = await Publicacion.findByPk(req.params.publicacion_id, {
+      include: [{ model: Imagen }],
+    });
 
-    if (!publicacion)
-      return res.status(404).send("Publicacion no encontrada");
+    if (!publicacion) return res.status(404).send("Publicacion no encontrada");
 
     // eliminar todas las denuncias asociadas a la imagen de la publicacion
     const idsImagenes = publicacion.Imagens.map((img) => img.id);

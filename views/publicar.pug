@@ -2,28 +2,28 @@ extends layout.pug
 
 block content 
   h2 Crear publicacion 
-    form(action="/publicar" method="POST" enctype="multipart/form-data")
-      .mb-3 
-        label.form-label(for="titulo") Titulo 
-        input#titulo.form-control(type="text" name="titulo" required)
-      .mb-3 
-        label.form-label(for="descripcion") Descripcion 
-        textarea#descripcion.form-control(name="descripcion" rows="3")
-      .mb-3 
-        label.form-label(for="imagenes") Imagenes 
-        input#imagenes.form-control(type="file" name="imagenes" multiple accept="image/*" required)
-      .mb-3 
-        label.form-label(for="etiquetas") Etiquetas (separadas por coma)
-        input#etiquetas.form-control(type="text" name="etiquetas" placeholder="Ej: paisaje, naturaleza, montaña")
-      .mb-3 
-        label.form-label(for="licencia") Licencia 
-        select#licencia.form-label(name="licencia")
-          option(value="sin_copyright") Sin Copyright [Libre]
-          option(value="con_copyright") Con Copyright 
-      .mb-3#marcaAguaGrupo(style="display:none")
-        label.form-label(for="marca_agua_texto") Texto para marca de agua 
-        input#marca_agua_texto.form-control(type="text" name="marca_agua_texto" placeholder="@ Tu nombre/usuario")
-      button.btn.btn-primary(type="submit") Publicar
+  form(action="/publicar" method="POST" enctype="multipart/form-data")
+    .mb-3 
+      label.form-label(for="titulo") Titulo 
+      input#titulo.form-control(type="text" name="titulo" required)
+    .mb-3 
+      label.form-label(for="descripcion") Descripcion 
+      textarea#descripcion.form-control(name="descripcion" rows="3")
+    .mb-3 
+      label.form-label(for="imagenes") Imagenes 
+      input#imagenes.form-control(type="file" name="imagenes" multiple accept="image/*" required)
+    .mb-3 
+      label.form-label(for="etiquetas") Etiquetas (separadas por coma)
+      input#etiquetas.form-control(type="text" name="etiquetas" placeholder="Ej: paisaje, naturaleza, montaña")
+    .mb-3 
+      label.form-label(for="licencia") Licencia 
+      select#licencia.form-select(name="licencia")
+        option(value="sin_copyright") Sin Copyright [Libre]
+        option(value="con_copyright") Con Copyright 
+    .mb-3#marcaAguaGrupo(style="display:none")
+      label.form-label(for="marca_agua_texto") Texto para marca de agua 
+      input#marca_agua_texto.form-control(type="text" name="marca_agua_texto" placeholder="@ Tu nombre/usuario")
+    button.btn.btn-primary(type="submit") Publicar
 
   script.
     document.getElementById('licencia').addEventListener('change', function(){

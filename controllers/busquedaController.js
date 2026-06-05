@@ -1,5 +1,5 @@
-const { Publicacion, Imagen, Etiqueta, Usuario } = require('../models');
-const { Op } = require('sequelize');
+const { Publicacion, Imagen, Etiqueta, Usuario } = require("../models");
+const { Op } = require("sequelize");
 
 // barra para busqueda
 exports.buscar = async (req, res) => {
@@ -20,7 +20,10 @@ exports.buscar = async (req, res) => {
       const usuarioEncontrado = await Usuario.findOne({
         where: { nombre: { [Op.iLike]: `%${usuario}` } },
       });
-      if (usuarioEncontrado && usuarioEncontrado.id !== req.session.usuario?.id) {
+      if (
+        usuarioEncontrado &&
+        usuarioEncontrado.id !== req.session.usuario?.id
+      ) {
         where.usuario_id = usuarioEncontrado.id;
       } else {
         where.usuario_id = -1; // esto es sin resultados

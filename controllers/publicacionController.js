@@ -333,7 +333,7 @@ exports.borrarComentario = async (req, res) => {
     const imagen = await Imagen.findByPk(comentario.imagen_id);
     const publicacion = await Publicacion.findByPk(imagen.publicacion_id);
 
-    if (publicacion.usuario_id !== req.session.usuario.id) {
+    if (publicacion.usuario_id !== req.session.usuario.id && comentario.usuario_id !== req.session.usuario.id) {
       return res.status(403).send("No autorizado");
     }
 

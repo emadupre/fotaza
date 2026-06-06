@@ -130,10 +130,10 @@ block content
                   p.mb-1= comentario.texto
                   small.text-muted= comentario.fecha.toLocaleDateString()
                 div
-                  if usuario && !esAutor && !comentario.borrado
+                  if usuario && !esAutor && comentario.usuario_id !== usuario.id && !comentario.borrado
                     a.btn.btn-sm.btn-outline-danger(href=`/denunciar/comentario/${comentario.id}`)
                       i.bi.bi-flag
-                  if usuario && esAutor && !comentario.borrado
+                  if usuario && (esAutor || comentario.usuario_id === usuario.id) && !comentario.borrado
                     form(action=`/borrar-comentario/${comentario.id}` method="POST")
                       button.btn.btn-sm.btn-outline-danger(type="submit")
                         i.bi.bi-trash

@@ -11,11 +11,13 @@ Para hacer este readme utilicé esto: [Sintaxis](https://docs.github.com/es/get-
 ```
 /config >(conexion db, variables de entorno)
 /models >(sequelize)
+/db >(inicialización db)
 /controllers >(logica de modulo)
 /services >(logica de negocio)
+/seeders >(usuarios de prueba)
 /routes >(definicion de rutas)
 /views >(plantillas pug)
-/public >(css, js, bs, imagenes)
+/public >(css, bs, imagenes)
 /uploads >(imagenes subidas)
 /middlewares >(auth, roles, etc.)
 /helpers >(funciones auxiliares)
@@ -118,6 +120,8 @@ npm install --save-dev nodemon sequelize-cli (el sequelize-cli me va a servir pa
 ```
 fotaza/
 ├── config/
+├── db/
+├── seeders/
 ├── models/
 ├── controllers/
 ├── services/

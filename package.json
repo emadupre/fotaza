@@ -4,6 +4,8 @@
   "description": "> Proyecto Final Integrador de Programacion WEB II",
   "main": "index.js",
   "scripts": {
+    "start": "node app.js",
+    "db:init": "node db/init.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

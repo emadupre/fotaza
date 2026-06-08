@@ -12,9 +12,7 @@ const {
   DenunciaComentario,
   Coleccion,
 } = require("../models");
-const { crearMarcaAgua } = require("../helpers/marcaAgua");
-const sharp = require("sharp");
-const fs = require("fs");
+const { procesarImagen } = require("../services/imagenService");
 const sequelize = require("../config/database");
 const { Op } = require("sequelize");
 
@@ -39,43 +37,15 @@ exports.crearPublicacion = async (req, res) => {
     // acá procesamos todas las imagenes en caso de haber + de 1 imagen
     // implementación futura (investigar) si es posible poder subir fotos de + de 5mb y comprimirlas
     for (const file of req.files) {
-      let nombreArchivo = file.filename;
-      const nombreComprimido = "comp-" + file.name;
+      const url = await procesarImagen(
+        file,
+        licencia,
+        marca_agua_texto,
+        req.session.usuario.nombre,
+      );
 
-      //primero comprimimos la imagen
-      await sharp(file.path)
-        .resize(1200, 1200, { fit: "inside", withoutEnlargement: true })
-        .jpeg({ quality: 80 }) // aca le mando una calidad del 80 que es aceptable
-        .toFile("uploads/" + nombreComprimido);
-
-      // eliminar el archivo original
-      fs.unlinkSync(file.path);
-
-      //si tiene copy aplica marca de agua
-      if (licencia === "con_copyright" && marca_agua_texto) {
-        const nombreConMarca = "wm-" + nombreComprimido;
-        const texto = marca_agua_texto || "© " + req.session.usuario.nombre;
-
-        await sharp("uploads/" + nombreComprimido)
-          .composite([
-            {
-              input: await crearMarcaAgua(texto),
-              gravity: "southeast",
-            },
-          ])
-          .toFile("uploads/" + nombreConMarca);
-
-        //eliminamos el archivo comprimido sin la marca
-        fs.unlinkSync("uploads/" + nombreComprimido);
-        nombreArchivo = nombreConMarca;
-      } else {
-        // aca si es sin copyright es la img comprimida sin la marca
-        nombreArchivo = nombreComprimido;
-      }
-
-      //guardamos en la BD
       await Imagen.create({
-        url: "/uploads/" + nombreArchivo,
+        url,
         publicacion_id: publicacion.id,
         licencia,
         marca_agua_texto:
@@ -333,7 +303,10 @@ exports.borrarComentario = async (req, res) => {
     const imagen = await Imagen.findByPk(comentario.imagen_id);
     const publicacion = await Publicacion.findByPk(imagen.publicacion_id);
 
-    if (publicacion.usuario_id !== req.session.usuario.id && comentario.usuario_id !== req.session.usuario.id) {
+    if (
+      publicacion.usuario_id !== req.session.usuario.id &&
+      comentario.usuario_id !== req.session.usuario.id
+    ) {
       return res.status(403).send("No autorizado");
     }
 

@@ -120,6 +120,7 @@ fotaza/
 ├── config/
 ├── models/
 ├── controllers/
+├── services/
 ├── routes/
 ├── views/
 ├── public/
@@ -161,3 +162,78 @@ const sequelize = new Sequelize(
 
 module.exports = sequelize;
 ```
+## Instalación y ejecución
+
+1. Clonar el repositorio:
+  ```
+  git clone https://github.com/emadupre/fotaza.git
+  cd fotaza
+  ```
+2. Instalar dependencias:
+  ```
+  npm install
+  ```
+3. Configurar las variables de entorno:
+  ```
+  cp .env.example .env
+  Editar .env con tus datos de PostgreSQL
+  ```
+4. Crear la base de datos en PostgreSQL (si no existe):
+  ```
+  # Usando psql o DBeaver
+  CREATE DATABASE fotaza;
+  ```
+5. Cargar la estructura y datos de pruebas
+  ```
+  psql -U postgres -d fotaza -f fotaza_backup.sql
+  # O ejecutar el script SQL desde DBeaver
+  ```
+6. Iniciar la aplicación:
+  ```
+  npm start
+  ```
+7. Abrir en el navegador:
+  ```
+  http://localhost:3001
+  ```
+## Usuarios de prueba
+>[!NOTE]
+>Acá cree varios usuarios para que se pueda chequear si bien el rol del admin validador, otros usuarios para poder hacer aportes.
+
+| Email | Contraseña | Rol |
+|-------|------------|-----|
+| validador@fotaza.com | 123456 | Validador |
+| jose@fotaza.com | 123456 | Usuario |
+| enzofet@fotaza.com | 123456 | Usuario |
+| naib@fotaza.com | 123456 | Usuario |
+| ema.dupre7@gmail.com | 123456 | Usuario |
+
+## Problemas y soluciones
+
+### 1. Redirecciones con 'res.redirect('back')'
+- **Problema:** Durante el desarrollo usé muchas veces el ('back'), lo cual al momento de correr el proyecto y redirigirme causaba el problema 'Can not GET /../back' porque en el navegador no siempre se envia el header 'Referer'.
+- **Solución**: Fue sencillo, remplacé todos las redirecciones por rutas absolutas por ej: 'res.redirect('/publicacines/' + id);'.
+
+### 2. Error en 'publicacion.addEtiquetas' porque no era una función.
+- **Problema:** Surgió al momento de realizar las relaciones N:M, el nombre no me coincidia con lo que esperaba.
+- **Solución:** Utilicé directamente la tabla intermedia 'PublicacionEtiqueta.create()', entonces, con eso me permite más control.
+
+### 3. Nombres de archivo con 'undefined' al momento de subir las imanges
+- **Problema:** Cuando creaba una publicación las imagenes se guardaban como 'comp-undefined' porque usaba mal el 'file.name' ya que no existe en multer. En lugar de 'file.filename'.
+- **Solución:** Corregí nada más la referencia en el controlador a 'file.filename'.
+
+### 4. Publicaciones propias me aparecían en 'De tus seguidos'
+- **Problema:** Al momento de hacer la consulta no excluia al usuario entonces mostraba sus propias publicaciones en la sección.
+- **Solución:** Tuve que corregir el array 'idsSeguidos' para eliminar el ID del usuario que está logueado.
+
+### 5. Error en el login
+- **Problema:** Al migrar la estructura en 'authController.js' pasé mal 'where: email' en lugar de 'where: { email }.
+- **Solución:** Corregí la sintaxis nada ma´s para usar un objeto como pide Sequelize.
+
+### 6. El botón "seguir" en el perfil propio
+- **Problema:** El botón de seguir/dejar de seguir me lo mostraba por más de que sea mi perfil.
+- **Solución:** Anidé los botones dentro de la condición 'if !esPropioPerfil' en la vista y listo.
+
+### 7. Panel validador
+- **Problema:** La consulta SQL con el having no me funcionaba ya que tenía 'HAVING COUNT(DISTINCT ...)' no funcionaba por Sequelize.
+- **Solución:** Ya que no funcionaba por la forma en que Sequelize generaba la consulta utilicé una consulta nativa 'sequelize.query()' y así obtenía los IDs de las publicaciones con más de 3 denuncias de usuarios distintos.

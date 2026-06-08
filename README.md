@@ -183,16 +183,19 @@ module.exports = sequelize;
   # Usando psql o DBeaver
   CREATE DATABASE fotaza;
   ```
-5. Cargar la estructura y datos de pruebas
+5. Crear las tablas en la base de datos:
   ```
-  psql -U postgres -d fotaza -f fotaza_backup.sql
-  # O ejecutar el script SQL desde DBeaver
+  npm run db:init
   ```
-6. Iniciar la aplicación:
+6. Cargar los seeders (Opcional)
+  ```
+  node seeders/seed.js
+  ```
+7. Iniciar la aplicación:
   ```
   npm start
   ```
-7. Abrir en el navegador:
+8. Abrir en el navegador:
   ```
   http://localhost:3001
   ```
@@ -207,6 +210,10 @@ module.exports = sequelize;
 | enzofet@fotaza.com | 123456 | Usuario |
 | naib@fotaza.com | 123456 | Usuario |
 | ema.dupre7@gmail.com | 123456 | Usuario |
+
+## BackUp
+>[!IMPORTANT]
+>El archivo 'fotaza_backup.sql' tiene la estructura completa de la base de datos sumado a datos de prueba.
 
 ## Problemas y soluciones
 

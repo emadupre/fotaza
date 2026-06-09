@@ -13,7 +13,7 @@ async function procesarImagen(file, licencia, marcaAguaTexto, autorNombre) {
         font_size: 40,
         text: encodeURIComponent(texto),
       },
-      gravity: 'southeast',
+      gravity: 'south_east',
       opacity: 70,
       color: '#ffffff',
     });

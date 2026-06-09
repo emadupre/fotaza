@@ -2,14 +2,20 @@ require("dotenv").config();
 const express = require("express");
 const session = require("express-session");
 const path = require("path");
+const fs = require("fs");
 const sequelize = require("./config/database");
 require("./models");
+
+const uploadsDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 const app = express();
 
 // estaticos
-app.use(express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use(express.static(path.join(__dirname, "public")));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // para las sesiones
 app.use(
@@ -28,15 +34,15 @@ app.use(express.json());
 app.use((req, res, next) => {
   res.locals.usuario = req.session.usuario || null;
   next();
-})
+});
 
 // vistas pug
 app.set("view engine", "pug");
 app.set("views", path.join(__dirname, "views"));
 
 // rutas
-app.use('/', require('./routes/homeRoutes'));
-app.use('/', require('./routes/authRoutes'));
+app.use("/", require("./routes/homeRoutes"));
+app.use("/", require("./routes/authRoutes"));
 app.use("/", require("./routes/perfilRoutes"));
 app.use("/", require("./routes/publicacionRoutes"));
 app.use("/", require("./routes/busquedaRoutes"));

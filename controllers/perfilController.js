@@ -48,3 +48,53 @@ exports.verPerfil = async (req, res) => {
     res.status(500).send("Error al cargar perfil");
   }
 };
+
+exports.seguirUsuario = async (req, res) => {
+  try {
+    const { Seguimiento, Notificacion } = require("../models");
+    const seguidor_id = req.session.usuario.id;
+    const seguido_id = req.params.usuario_id;
+
+    if (seguidor_id == seguido_id) {
+      return res.status(400).send("No podes seguirte a vos mismo");
+    }
+
+    const existente = await Seguimiento.findOne({
+      where: { seguidor_id, seguido_id },
+    });
+
+    if (!existente) {
+      await Seguimiento.create({ seguidor_id, seguido_id });
+
+      await Notificacion.create({
+        tipo_evento: "seguimiento",
+        usuario_id: seguido_id,
+        actor_id: seguidor_id,
+        referencia_id: null,
+        referencia_tipo: null,
+      });
+    }
+
+    res.redirect("/perfil/" + seguido_id);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error al seguir");
+  }
+};
+
+exports.dejarDeSeguirUsuario = async (req, res) => {
+  try {
+    const { Seguimiento } = require("../models");
+    const seguidor_id = req.session.usuario.id;
+    const seguido_id = req.params.usuario_id;
+
+    await Seguimiento.destroy({
+      where: { seguidor_id, seguido_id },
+    });
+
+    res.redirect("/perfil/" + seguido_id);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error al dejar de seguir");
+  }
+};

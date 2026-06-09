@@ -1,9 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const upload = require('../config/multer');
+const upload = require('../config/cloudinary').upload;
 const publicacionController = require('../controllers/publicacionController');
 const { requiereAutenticacion } = require('../middlewares/auth');
-const { route } = require('./perfilRoutes');
 
 //form y crear publicacion
 router.get('/publicar', requiereAutenticacion, publicacionController.mostrarFormulario);

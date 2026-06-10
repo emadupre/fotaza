@@ -94,6 +94,19 @@ exports.verPublicacion = async (req, res) => {
       return res.status(400).send("Publicacion no encontrada");
     }
 
+    if (!req.session.usuario) {
+      const tieneCopyright = publicacion.Imagens.some(
+        (img) => img.licencia === "con_copyright",
+      );
+      if (tieneCopyright) {
+        return res
+          .status(403)
+          .send(
+            "Esta publicacion tiene imagenes con copyright, inicia sesión para verlas.",
+          );
+      }
+    }
+
     //comentarios
     const comentarios = await Comentario.findAll({
       where: { imagen_id: publicacion.Imagens[0]?.id, borrado: false },

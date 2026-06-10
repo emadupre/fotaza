@@ -4,7 +4,32 @@ const Op = require("sequelize").Op;
 exports.home = async (req, res) => {
   // si el usuario no esta logueado tieen que mostrar la home normal hasta ahora
   if (!req.session.usuario) {
-    return res.render("home");
+    try {
+      const publicacionesPublicas = await Publicacion.findAll({
+        where: { estado: { [Op.ne]: "baja" } },
+        include: [
+          {
+            model: Imagen,
+            where: { licencia: "sin_copyright" },
+            required: true,
+          },
+          {
+            model: Usuario,
+            attributes: ["id", "nombre"],
+          },
+        ],
+        order: [["fecha_creacion", "DESC"]],
+        limit: 30,
+      });
+
+      return res.render("home", {
+        usuario: null,
+        publicacionesPublicas,
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).send("Error al cargar la home");
+    }
   }
   try {
     const seguidos = await Seguimiento.findAll({

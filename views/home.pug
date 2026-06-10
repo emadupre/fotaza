@@ -62,3 +62,20 @@ block content
       p.lead Comunidad de Fotografos
       a.btn.btn-primary(href="/login") Iniciar Sesion
       a.btn.btn-outline-primary.ms-2(href="/registro") Registrate
+      
+    if publicacionesPublicas && publicacionesPublicas.length > 0
+      h3.mt-4 Imágenes publicas recientes 
+      .row 
+        each pub in publicacionesPublicas 
+          .col-md-4.mb-3 
+            .card
+              if pub.Imagens && pub.Imagens.length > 0
+                img.card-img-top(src=pub.Imagens[0].url alt=pub.titulo style="height:200px; object-fit:cover")
+              .card-body 
+                h5.card-title= pub.titulo 
+                p 
+                  strong Por:
+                  a(href=`/perfil/${pub.Usuario.id}`)= pub.Usuario.nombre 
+                a.btn.btn-sm.btn-primary(href=`/publicaciones/${pub.id}`) Ver detalle
+    else 
+      .alert.alert-info No hay imagenes públicas disponibles.

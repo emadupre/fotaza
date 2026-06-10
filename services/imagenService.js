@@ -5,7 +5,7 @@ async function procesarImagen(file, licencia, marcaAguaTexto, autorNombre) {
   const transformations = [{ width: 1200, height: 1200, crop: 'limit', quality: 'auto' }];
 
   // si es con copyright le agrego el overlay con el texto.
-  if (licencia === 'con_copyright' && marcaAguaTexto) {
+  if (licencia === 'con_copyright') {
     const texto = marcaAguaTexto || "© " + autorNombre;
     transformations.push({
       overlay: {

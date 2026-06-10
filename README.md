@@ -137,21 +137,27 @@ fotaza/
 ```
 > Dentro del .env.example ponemos las variables de entorno
 ```
+# PostgreSQL
 DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=fotaza
-DB_USER=emadupre
-DB_PASSWORD=admin
-SESSION_SECRET=proyecto_final_web
-PORT=3001 (acá yo tuve que utilizar el puerto 3001 ya que en el puerto 3000 tengo el ADGuard configurado).
-```
-> Configuracion de Cloudinary en el .env.example (ahora es necesario para subir las imagenes)
-Al momento de crear la cuenta en cloudinary nos proporciona el cloud name, api key y el api secret que no lo voy a poner acá porque a futuro este proyecto será publico y así cualquiera pueda tener su propia configuracion.
-```
+DB_USER=tu_usuario_postgres
+DB_PASSWORD=tu_contraseña_postgres
+
+# Sesiones
+SESSION_SECRET=una_clave_secreta_larga_y_aleatoria
+
+# Puerto
+PORT=3000
+
+# Cloudinary (para imágenes)
 CLOUDINARY_CLOUD_NAME=tu_cloud_name
 CLOUDINARY_API_KEY=tu_api_key
 CLOUDINARY_API_SECRET=tu_api_secret
 ```
+> Configuracion de Cloudinary en el .env.example (ahora es necesario para subir las imagenes)
+Al momento de crear la cuenta en cloudinary nos proporciona el cloud name, api key y el api secret que no lo voy a poner acá porque a futuro este proyecto será publico y así cualquiera pueda tener su propia configuracion.
+
 > Configuramos el Sequelize en config/database.js
 ```
 const { Sequelize } = require('Sequelize');

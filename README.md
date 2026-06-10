@@ -18,7 +18,6 @@ Para hacer este readme utilicé esto: [Sintaxis](https://docs.github.com/es/get-
 /routes >(definicion de rutas)
 /views >(plantillas pug)
 /public >(css, bs, imagenes)
-/uploads >(imagenes subidas)
 /middlewares >(auth, roles, etc.)
 /helpers >(funciones auxiliares)
 ```
@@ -110,7 +109,7 @@ npm init -y (acá usé el -y para omitir el asistente y crea el package.json por
 ```
 > Paso siguiente instalo las dependencias que voy a utilizar:
 ```
-npm install express sequelize pg-hstore pug multer sharp bcrypt express-session dotenv
+npm install express sequelize pg pg-hstore pug multer cloudinary bcrypt express-session dotenv
 ```
 > Y despues para el desarrollo:
 ```
@@ -130,7 +129,6 @@ fotaza/
 ├── public/
 │   ├── css/
 │   └── js/
-├── uploads/
 ├── middlewares/
 ├── helpers/
 ├── .env.example
@@ -146,6 +144,13 @@ DB_USER=emadupre
 DB_PASSWORD=admin
 SESSION_SECRET=proyecto_final_web
 PORT=3001 (acá yo tuve que utilizar el puerto 3001 ya que en el puerto 3000 tengo el ADGuard configurado).
+```
+> Configuracion de Cloudinary en el .env.example (ahora es necesario para subir las imagenes)
+Al momento de crear la cuenta en cloudinary nos proporciona el cloud name, api key y el api secret que no lo voy a poner acá porque a futuro este proyecto será publico y así cualquiera pueda tener su propia configuracion.
+```
+CLOUDINARY_CLOUD_NAME=tu_cloud_name
+CLOUDINARY_API_KEY=tu_api_key
+CLOUDINARY_API_SECRET=tu_api_secret
 ```
 > Configuramos el Sequelize en config/database.js
 ```
@@ -180,7 +185,7 @@ module.exports = sequelize;
 3. Configurar las variables de entorno:
   ```
   cp .env.example .env
-  Editar .env con tus datos de PostgreSQL
+  Editar .env con tus datos de PostgreSQL y Cloudinary
   ```
 4. Crear la base de datos en PostgreSQL (si no existe):
   ```
@@ -213,6 +218,7 @@ module.exports = sequelize;
 | jose@fotaza.com | 123456 | Usuario |
 | enzofet@fotaza.com | 123456 | Usuario |
 | naib@fotaza.com | 123456 | Usuario |
+| fer@fotaza.com | 123456 | Usuario |
 | ema.dupre7@gmail.com | 123456 | Usuario |
 
 ## BackUp
@@ -248,3 +254,20 @@ module.exports = sequelize;
 ### 7. Panel validador
 - **Problema:** La consulta SQL con el having no me funcionaba ya que tenía 'HAVING COUNT(DISTINCT ...)' no funcionaba por Sequelize.
 - **Solución:** Ya que no funcionaba por la forma en que Sequelize generaba la consulta utilicé una consulta nativa 'sequelize.query()' y así obtenía los IDs de las publicaciones con más de 3 denuncias de usuarios distintos.
+
+### 8. Conexión a la base de datos de Render
+- **Problema:** Al momento de desplegar en Render, la aplicación no podía conectarse a la base de datos. El error que me tiraba era getaddrinfo ENOTFOUND dpg-d8jkm01kh4rs73e8bqfg-a porque se usaba como el hostname interno sin el dominio completo.
+- **Solución:** Utilicé el hostname externo completo (dpg-d8jkm01kh4rs73e8bqfg-a.oregon-postgres.render.com) en la variable DB_HOST del entorno de render, y se activó SSL en la configuración de Sequelize para la producción.
+
+### 9. Error ENOENT al subir las imagenes en Render
+- **Problema:** La aplicación seguía usando el multer.diskStorage y trataba de guardar archivos en la carpeta de uploads/, lo que no era compatible con Render. El error era  ENOENT: no such file or directory, open 'uploads/...'.
+- **Solución:** Tuve que migrar el almacenamiento de las imagenes a Cloudinary. Cambié el diskStorage por memoryStorage y la subida se realiza directamente desde el buffer del archivo, eliminando la dependencia del sistema de archivos.
+
+### 10. Error Invalid gravity in transformation en Cloudinary
+- **Problema:** Al subir una imagen con la marca de agua, Cloudinary me devolvía el error ``` Invalid gravity in transformation: southeast ```.
+- **Solución:** Tuve que corregir el valor de gravity en la transformación de Cloudinary, usando el ```'south_east'``` (con el guión bajo) en lugar del ```'southeast'``` que venía utilizando, porque es la sintaxis que utiliza Cloudinary.
+
+### 11. Simplificación del procesamiento de imágenes
+- **Problema:** Anteriormente usaba las librerias ```sharp``` y ```fs``` para comprimir y poner la marca de agua, lo que tenía que guardar archivos temporales en el proyecto y no era la mejor opción al momento de desplegar en Render.
+- **Solución:** No renegué tanto y me fui directamente a Cloudinary por recomendación de un compañero, y la verdad que el codigo y configuración fue mucho más simple. Eliminé la dependencia ```sharp``` y las otras operaciones de lectura y escritura de archivos. Me ayudó bastante, ya que en Render era complicado.
+

@@ -2,7 +2,21 @@
 > Proyecto Final Integrador de Programacion WEB II
 
 Para hacer este readme utilicé esto: [Sintaxis](https://docs.github.com/es/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax)
-#### La aplicación la voy a construir con:
+
+## Índice
+
+- [Tecnologías utilizadas](#la-aplicación-la-voy-a-construir-con)
+- [Estructura de carpetas](#carpetas)
+- [Base de datos](#estructura-para-la-base-de-datos)
+- [Diagrama ER](#diagrama-er)
+- [Inicialización del proyecto](#inicializacion-del-proyecto)
+- [Instalación y ejecución](#instalación-y-ejecución)
+- [Usuarios de prueba](#usuarios-de-prueba)
+- [Backup](#backup)
+- [Problemas y soluciones](#problemas-y-soluciones)
+- [Aplicación en producción](https://fotaza-z6pl.onrender.com)
+
+## La aplicación la voy a construir con:
 * Model: Sequelize + PostgreSQL
 * Vista: Pug -> para renderizados en el servidor.
 * Controladores: Express, rutas y logicas en capas ej: (rutas -> controladores -> servicios -> modelos).
@@ -128,7 +142,6 @@ fotaza/
 ├── views/
 ├── public/
 │   ├── css/
-│   └── js/
 ├── middlewares/
 ├── helpers/
 ├── .env.example
@@ -224,8 +237,6 @@ module.exports = sequelize;
 | jose@fotaza.com | 123456 | Usuario |
 | enzofet@fotaza.com | 123456 | Usuario |
 | naib@fotaza.com | 123456 | Usuario |
-| fer@fotaza.com | 123456 | Usuario |
-| ema.dupre7@gmail.com | 123456 | Usuario |
 
 ## BackUp
 >[!IMPORTANT]
@@ -280,3 +291,7 @@ module.exports = sequelize;
 ### 12. Mostrar imágenes públicas a usuarios anónimos
 - **Problema:** El requisito del TPI remarcaba que los usuarios no registrados podian ver las publicaciones sin copyright. Al principio el `home.pug` solo mostraba para loguearse/registrarse, pero no listaba ninguna imagen publica. Además, si un usuario anonimo intentaba acceder directamente a la url de una publicacion con copyright, podía verla sin restricción. Ahora eso ya no se puede.
 - **Solución:** Modifiqué el `homeController.js` para que cuando no hay sesión, busque publicaciones activas que contengan imagenes sin licencia, es decir `sin_copyright` y las envia a la vista `publicacionesPublicas`. En el `home.pug`, dentro del bloque `else` agregué una sección que muestra estas imagenes con la vista previa. Tambien le agregue una validación en `verPublicacion` que sería el controlador que impide a la gente anonima ver una publicacion si alguna de las imagenes tiene copyright, devolviendo el error 403 con un mensaje explicativo.
+
+### 13. Marca de agua no se aplicaba si el campo de texto estaba vacío
+- **Problema:** Al momento de crear una publicación con copyright, si el usuario dejaba vacío el campo de texto para la marca de agua, la imagen se subía sin ninguna protección. La condición original exigía que existiera texto para aplicar la marca de agua.
+- **Solución:** Modifiqué `services/imagenService.js` para que, cuando la licencia es `con_copyright`, siempre aplique una marca de agua. Si el campo está vacío usa un valor por defecto que es: `"© " + nombre del autor`. Así ninguna imagen con copyright queda desprotegida.

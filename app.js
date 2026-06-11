@@ -45,7 +45,7 @@ app.use("/", require("./routes/mensajeRoutes"));
 app.use("/", require("./routes/coleccionRoutes"));
 
 //sync bd y arrancar el servidor
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 
 sequelize
   .authenticate()

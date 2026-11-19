@@ -6,12 +6,11 @@ const { Op } = require("sequelize");
 exports.panel = async (req, res) => {
   try {
     const [resultados] = await sequelize.query(`
-      SELECT "Imagen"."publicacion_id"
-      FROM "imagenes" AS "Imagen"
-      INNER JOIN "denuncias_imagenes" AS "DenunciaImagen"
-        ON "Imagen"."id" = "DenunciaImagen"."imagen_id"
-      GROUP BY "Imagen"."id", "Imagen"."publicacion_id"
-      HAVING COUNT(DISTINCT "DenunciaImagen"."usuario_id") > 3
+      SELECT i."publicacion_id"
+      FROM "imagenes" AS i
+      INNER JOIN "denuncias_imagenes" AS d ON d."imagen_id" = i."id"
+      GROUP BY i."publicacion_id"
+      HAVING COUNT(DISTINCT d."usuario_id") > 3
       `);
 
     const idsPublicaciones = resultados.map((r) => r.publicacion_id);
@@ -55,29 +54,32 @@ exports.panel = async (req, res) => {
 // dar de baja la publicacion en su totalidad
 exports.bajarPublicacion = async (req, res) => {
   try {
-    const publicacion = await Publicacion.findByPk(req.params.publicacion_id);
+    const bajada = await sequelize.transaction(async (t) => {
+      const publicacion = await Publicacion.findByPk(
+        req.params.publicacion_id,
+        { transaction: t },
+      );
+      if (!publicacion || publicacion.estado === "baja") return false;
 
-    if (!publicacion || publicacion.estado === "baja") {
-      return res
-        .status(404)
-        .send("Publicacion no encontrada o ya tiene la baja.");
-    }
+      await publicacion.update({ estado: "baja" }, { transaction: t });
 
-    // cambiar estado de la publicacion
-    await publicacion.update({ estado: "baja" });
+      const bajas = await Publicacion.count({
+        where: { usuario_id: publicacion.usuario_id, estado: "baja" },
+        transaction: t,
+      });
 
-    // verificar si el autor tiene 3 publicaciones bajas para inhabilitarla.
-    const bajas = await Publicacion.count({
-      where: { usuario_id: publicacion.usuario_id, estado: "baja" },
+      if (bajas >= 3) {
+        await Usuario.update(
+          {
+            cuenta_activa: false,
+          },
+          { where: { id: publicacion.usuario_id }, transaction: t },
+        );
+      }
+      return true;
     });
 
-    if (bajas >= 3) {
-      await Usuario.update(
-        { cuenta_activa: false },
-        { where: { id: publicacion.usuario_id } },
-      );
-    }
-
+    if (!bajada) return res.status(404).send("Publicacion no encontrada o ya dada de baja.");
     res.redirect("/validador");
   } catch (error) {
     console.error(error);

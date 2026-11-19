@@ -62,7 +62,7 @@ block content
       p.lead Comunidad de Fotografos
       a.btn.btn-primary(href="/login") Iniciar Sesion
       a.btn.btn-outline-primary.ms-2(href="/registro") Registrate
-      
+
     if publicacionesPublicas && publicacionesPublicas.length > 0
       h3.mt-4 Imágenes publicas recientes 
       .row 
@@ -74,7 +74,7 @@ block content
               .card-body 
                 h5.card-title= pub.titulo 
                 p 
-                  strong Por:
+                  strong Por: 
                   a(href=`/perfil/${pub.Usuario.id}`)= pub.Usuario.nombre 
                 a.btn.btn-sm.btn-primary(href=`/publicaciones/${pub.id}`) Ver detalle
     else 

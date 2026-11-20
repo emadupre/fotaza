@@ -25,6 +25,8 @@ const Interes = sequelize.define(
   {
     tableName: "intereses",
     timestamps: false,
+    indexes: [{ unique: true, fields: ["usuario_id", "imagen_id"] },
+    { fields: ["imagen_id"]}],
   },
 );
 

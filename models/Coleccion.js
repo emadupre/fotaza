@@ -21,6 +21,7 @@ const Coleccion = sequelize.define(
   {
     tableName: "colecciones",
     timestamps: false,
+    indexes: [{ unique: true, fields: ["usuario_id", "nombre"] }],
   },
 );
 

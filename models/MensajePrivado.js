@@ -39,6 +39,10 @@ const MensajePrivado = sequelize.define(
   {
     tableName: "mensajes_privados",
     timestamps: false,
+    indexes: [
+      { fields: ["destinatario_id", "leido"] },
+      { fields: ["remitente_id"] },
+    ],
   },
 );
 

@@ -20,6 +20,11 @@ const DenunciaImagen = sequelize.define(
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
     },
+    estado: {
+      type: DataTypes.STRING(12),
+      allowNull: false,
+      defaultValue: "pendiente", // pendiente | desestimada | aceptada -> por el CHECK está en constraints.sql
+    },
     usuario_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -32,6 +37,10 @@ const DenunciaImagen = sequelize.define(
   {
     tableName: "denuncias_imagenes",
     timestamps: false,
+    indexes: [
+      { unique: true, fields: ["usuario_id", "imagen_id"] },
+      { fields: ["imagen_id", "estado"] },
+    ],
   },
 );
 

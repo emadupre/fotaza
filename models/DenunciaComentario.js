@@ -32,6 +32,10 @@ const DenunciaComentario = sequelize.define(
   {
     tableName: "denuncias_comentarios",
     timestamps: false,
+    indexes: [
+      { unique: true, fields: ["usuario_id", "comentario_id"] },
+      { fields: ["comentario_id"] },
+    ],
   },
 );
 

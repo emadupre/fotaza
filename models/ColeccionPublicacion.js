@@ -18,6 +18,7 @@ const ColeccionPublicacion = sequelize.define(
   {
     tableName: "colecciones_publicaciones",
     timestamps: false,
+    indexes: [{ fields: ["publicacion_id"] }],
   },
 );
 

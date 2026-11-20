@@ -25,6 +25,10 @@ const Seguimiento = sequelize.define(
   {
     tableName: "seguimientos",
     timestamps: false,
+    indexes: [
+      { unique: true, fields: ["seguidor_id", "seguido_id"] },
+      { fields: ["seguido_id"] },
+    ],
   },
 );
 

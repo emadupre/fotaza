@@ -18,6 +18,7 @@ const PublicacionEtiqueta = sequelize.define(
   {
     tableName: "publicaciones_etiquetas",
     timestamps: false,
+    indexes: [{ fields: ["etiqueta_id"] }],
   },
 );
 

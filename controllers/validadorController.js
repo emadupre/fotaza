@@ -8,7 +8,8 @@ exports.panel = async (req, res) => {
     const [resultados] = await sequelize.query(`
       SELECT i."publicacion_id"
       FROM "imagenes" AS i
-      INNER JOIN "denuncias_imagenes" AS d ON d."imagen_id" = i."id"
+      INNER JOIN "denuncias_imagenes" AS d
+       ON d."imagen_id" = i."id" AND d."estado" = 'pendiente'
       GROUP BY i."publicacion_id"
       HAVING COUNT(DISTINCT d."usuario_id") > 3
       `);
@@ -33,6 +34,8 @@ exports.panel = async (req, res) => {
           include: [
             {
               model: DenunciaImagen,
+              where: { estado: "pendiente" },
+              required: false,
               include: [{ model: Usuario, attributes: ["id", "nombre"] }],
             },
           ],
@@ -63,6 +66,19 @@ exports.bajarPublicacion = async (req, res) => {
 
       await publicacion.update({ estado: "baja" }, { transaction: t });
 
+      const imagenes = await Imagen.findAll({
+        where: { publicacion_id: publicacion.id },
+        attributes: ["id"],
+        transaction: t,
+      });
+      await DenunciaImagen.update(
+        { estado: "aceptada" },
+        {
+          where: { imagen_id: imagenes.map((i) => i.id), estado: "pendiente" },
+          transaction: t,
+        },
+      );
+
       const bajas = await Publicacion.count({
         where: { usuario_id: publicacion.usuario_id, estado: "baja" },
         transaction: t,
@@ -79,7 +95,10 @@ exports.bajarPublicacion = async (req, res) => {
       return true;
     });
 
-    if (!bajada) return res.status(404).send("Publicacion no encontrada o ya dada de baja.");
+    if (!bajada)
+      return res
+        .status(404)
+        .send("Publicacion no encontrada o ya dada de baja.");
     res.redirect("/validador");
   } catch (error) {
     console.error(error);
@@ -98,16 +117,17 @@ exports.desestimarDenuncias = async (req, res) => {
 
     // eliminar todas las denuncias asociadas a la imagen de la publicacion
     const idsImagenes = publicacion.Imagens.map((img) => img.id);
-    await DenunciaImagen.destroy({
-      where: { imagen_id: idsImagenes },
-    });
+    await DenunciaImagen.update(
+      { estado: "desestimada" },
+      { where: { imagen_id: idsImagenes, estado: "pendiente" } },
+    );
 
     // esto más bien es opcional pero puede sumar el volver a estado activo si estaba en revision
     if (publicacion.estado === "en_revision") {
       await publicacion.update({ estado: "activa" });
     }
 
-    res.redirect("/validador");
+    res.redirect("/");
   } catch (error) {
     console.error(error);
     res.status(500).send("Error al desestimar");

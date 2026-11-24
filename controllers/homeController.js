@@ -1,3 +1,4 @@
+const { SIN_IMAGENES_CON_COPYRIGHT } = require("../helpers/visibilidad");
 const { Seguimiento, Publicacion, Imagen, Usuario } = require("../models");
 const Op = require("sequelize").Op;
 
@@ -6,17 +7,13 @@ exports.home = async (req, res) => {
   if (!req.session.usuario) {
     try {
       const publicacionesPublicas = await Publicacion.findAll({
-        where: { estado: { [Op.ne]: "baja" } },
+        where: {
+          estado: { [Op.ne]: "baja" },
+          [Op.and]: [SIN_IMAGENES_CON_COPYRIGHT],
+        },
         include: [
-          {
-            model: Imagen,
-            where: { licencia: "sin_copyright" },
-            required: true,
-          },
-          {
-            model: Usuario,
-            attributes: ["id", "nombre"],
-          },
+          { model: Imagen },
+          { model: Usuario, attributes: ["id", "nombre"] },
         ],
         order: [["fecha_creacion", "DESC"]],
         limit: 30,

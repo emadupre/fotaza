@@ -11,7 +11,7 @@ block content
               .d-flex.flex-wrap.gap-2.mb-3
                 if usuario && !esAutor
                   form(action=`/valorar/${imagen.id}` method="POST" class="d-flex align-items-center gap-1")
-                    select.form-select.form-select-sm(name="puntuacion" class="width:auto")
+                    select.form-select.form-select-sm(name="puntuacion" style="width:auto;")
                       option(value="") Tu voto..
                       option(value="1") ⭐1
                       option(value="2") ⭐⭐2
@@ -89,7 +89,7 @@ block content
       p.text-muted
         | Por 
         a(href=`/perfil/${publicacion.Usuario.id}`)= publicacion.Usuario.nombre
-        |   #{publicacion.fecha_creacion.toLocaleDateString()}
+        |   #{publicacion.fecha_creacion.toLocaleDateString('es-AR')}
 
       if esAutor && publicacion.estado !== 'en_revision'
         a.btn.btn-sm.btn-outline-secondary.mb-3(href=`/publicaciones/${publicacion.id}/editar`)
@@ -128,7 +128,7 @@ block content
                 div
                   strong= comentario.Usuario.nombre
                   p.mb-1= comentario.texto
-                  small.text-muted= comentario.fecha.toLocaleDateString()
+                  small.text-muted= comentario.fecha.toLocaleDateString('es-AR')
                 div
                   if usuario && !esAutor && comentario.usuario_id !== usuario.id && !comentario.borrado
                     a.btn.btn-sm.btn-outline-danger(href=`/denunciar/comentario/${comentario.id}`)
@@ -153,7 +153,7 @@ block content
             inputNombre.removeAttribute('required'); // quita el required si estaba
           } else {
             inputNombre.style.display = 'block';
-            inputNombre.setAttribute('required'); // pone el required al crear una nueva
+            inputNombre.required = true; // pone el required al crear una nueva
           }
         }
 

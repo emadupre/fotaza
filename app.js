@@ -1,9 +1,9 @@
-require("dotenv").config();
+require("dotenv").config({ quiet: true });
 const express = require("express");
 const session = require("express-session");
 const path = require("path");
 const sequelize = require("./config/database");
-require("./models");
+const { Usuario } = require("./models");
 
 const app = express();
 
@@ -24,6 +24,18 @@ app.use(
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 // middleware para pasar los usuarios
+app.use(async (req, res, next) => {
+  if (!req.session.usuario) return next();
+  const u = await Usuario.findByPk(req.session.usuario.id, {
+    attributes: ["id", "nombre", "rol", "cuenta_activa"],
+  });
+  if (!u || !u.cuenta_activa) {
+    return req.session.destroy(() => res.redirect("/login"));
+  }
+  req.session.usuario = { id: u.id, nombre: u.nombre, rol: u.rol };
+  next();
+});
+
 app.use((req, res, next) => {
   res.locals.usuario = req.session.usuario || null;
   next();
@@ -43,6 +55,19 @@ app.use("/", require("./routes/validadorRoutes"));
 app.use("/", require("./routes/notificacionRoutes"));
 app.use("/", require("./routes/mensajeRoutes"));
 app.use("/", require("./routes/coleccionRoutes"));
+app.use((req, res) => {
+  res.status(404).render("error", {
+    codigo: 404,
+    mensaje: "La pagina que buscas no existe",
+  });
+});
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).render("error", {
+    codigo: 500,
+    mensaje: "Algo salio mal. Probá de nuevo",
+  });
+});
 
 //sync bd y arrancar el servidor
 const PORT = process.env.PORT || 3000;

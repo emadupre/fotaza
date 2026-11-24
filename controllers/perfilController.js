@@ -1,4 +1,6 @@
+const { RAW } = require("sequelize/lib/query-types");
 const Usuario = require("../models/Usuario");
+const { Op } = require("sequelize");
 //perfil propio
 exports.miPerfil = (req, res) => {
   if (!req.session.usuario) {
@@ -30,8 +32,13 @@ exports.verPerfil = async (req, res) => {
       where: { seguidor_id: req.session.usuario.id, seguido_id: usuarioId },
     });
 
+    const esPropioPerfil = req.session.usuario.id === usuarioId;
+
     const publicaciones = await Publicacion.findAll({
-      where: { usuario_id: usuarioId },
+      where: {
+        usuario_id: usuarioId,
+        ...(esPropioPerfil ? {} : { estado: { [Op.ne]: "baja" } }),
+      },
       include: [Imagen],
       order: [["fecha_creacion", "DESC"]],
     });
@@ -53,25 +60,25 @@ exports.seguirUsuario = async (req, res) => {
   try {
     const { Seguimiento, Notificacion } = require("../models");
     const seguidor_id = req.session.usuario.id;
-    const seguido_id = req.params.usuario_id;
-
-    if (seguidor_id == seguido_id) {
+    const seguido_id = Number(req.params.usuario_id);
+    if (!Number.isInteger(seguido_id))
+      return res.status(404).send("Usuario no encontrado");
+    if (seguidor_id === seguido_id) {
       return res.status(400).send("No podes seguirte a vos mismo");
     }
 
-    const existente = await Seguimiento.findOne({
+    const objetivo = await Usuario.findByPk(seguido_id);
+    if (!objetivo || !objetivo.cuenta_activa)
+      return res.status(404).send("Usuario no encontrado");
+
+    const [, creado] = await Seguimiento.findOrCreate({
       where: { seguidor_id, seguido_id },
     });
-
-    if (!existente) {
-      await Seguimiento.create({ seguidor_id, seguido_id });
-
+    if (creado) {
       await Notificacion.create({
         tipo_evento: "seguimiento",
         usuario_id: seguido_id,
         actor_id: seguidor_id,
-        referencia_id: null,
-        referencia_tipo: null,
       });
     }
 

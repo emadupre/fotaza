@@ -1,5 +1,6 @@
 const { Publicacion, Imagen, Etiqueta, Usuario } = require("../models");
 const { Op } = require("sequelize");
+const { SIN_IMAGENES_CON_COPYRIGHT } = require("../helpers/visibilidad");
 
 // barra para busqueda
 exports.buscar = async (req, res) => {
@@ -8,6 +9,8 @@ exports.buscar = async (req, res) => {
     const where = {
       estado: { [Op.ne]: "baja" }, //acá lo que descarto es que solo muestre las publicaciones activas.
     };
+
+    if (!req.session.usuario) where[Op.and] = [SIN_IMAGENES_CON_COPYRIGHT];
 
     if (q) {
       where[Op.or] = [
@@ -18,7 +21,7 @@ exports.buscar = async (req, res) => {
 
     if (usuario) {
       const usuarioEncontrado = await Usuario.findOne({
-        where: { nombre: { [Op.iLike]: `%${usuario}` } },
+        where: { nombre: { [Op.iLike]: `%${usuario}%` } },
       });
       if (
         usuarioEncontrado &&

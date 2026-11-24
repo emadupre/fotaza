@@ -2,6 +2,8 @@ extends layout.pug
 
 block content 
   h2 Crear publicacion 
+  if error
+    .alert.alert-danger= error
   form(action="/publicar" method="POST" enctype="multipart/form-data")
     .mb-3 
       label.form-label(for="titulo") Titulo 

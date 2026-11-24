@@ -1,34 +1,46 @@
-extends layout.pug 
+extends layout.pug
 
-block content 
-  h2 Crear publicacion 
+block content
+  h2.mb-3 Crear publicación
   if error
     .alert.alert-danger= error
   form(action="/publicar" method="POST" enctype="multipart/form-data")
-    .mb-3 
-      label.form-label(for="titulo") Titulo 
-      input#titulo.form-control(type="text" name="titulo" required)
-    .mb-3 
-      label.form-label(for="descripcion") Descripcion 
-      textarea#descripcion.form-control(name="descripcion" rows="3")
-    .mb-3 
-      label.form-label(for="imagenes") Imagenes 
-      input#imagenes.form-control(type="file" name="imagenes" multiple accept="image/*" required)
-    .mb-3 
+    .mb-3
+      label.form-label(for="titulo") Título
+      input#titulo.form-control(type="text" name="titulo" maxlength="150" value=(valores && valores.titulo) required)
+    .mb-3
+      label.form-label(for="descripcion") Descripción (opcional)
+      textarea#descripcion.form-control(name="descripcion" rows="3" maxlength="2000")= valores && valores.descripcion
+    .mb-3
+      label.form-label(for="imagenes") Imágenes
+      input#imagenes.form-control(type="file" name="imagenes" multiple accept="image/jpeg,image/png,image/gif,image/webp" required)
+      .form-text Hasta 5 imágenes de 5 MB cada una (JPG, PNG, GIF o WebP).
+    .mb-3
       label.form-label(for="etiquetas") Etiquetas (separadas por coma)
-      input#etiquetas.form-control(type="text" name="etiquetas" placeholder="Ej: paisaje, naturaleza, montaña")
-    .mb-3 
-      label.form-label(for="licencia") Licencia 
+      input#etiquetas.form-control(type="text" name="etiquetas" placeholder="Ej: paisaje, naturaleza, montaña" value=(valores && valores.etiquetas) required)
+    .mb-3
+      label.form-label(for="licencia") Licencia
       select#licencia.form-select(name="licencia")
-        option(value="sin_copyright") Sin Copyright [Libre]
-        option(value="con_copyright") Con Copyright 
-    .mb-3#marcaAguaGrupo(style="display:none")
-      label.form-label(for="marca_agua_texto") Texto para marca de agua 
-      input#marca_agua_texto.form-control(type="text" name="marca_agua_texto" placeholder="@ Tu nombre/usuario")
+        option(value="sin_copyright" selected=(!valores || valores.licencia !== 'con_copyright')) Sin copyright (libre)
+        option(value="con_copyright" selected=(valores && valores.licencia === 'con_copyright')) Con copyright (lleva marca de agua)
+    #marcaAguaGrupo.mb-3(style="display:none")
+      label.form-label(for="marca_agua_texto") Texto de la marca de agua
+      input#marca_agua_texto.form-control(type="text" name="marca_agua_texto" maxlength="60" placeholder="Si lo dejás vacío se usa © tu nombre" value=(valores && valores.marca_agua_texto))
     button.btn.btn-primary(type="submit") Publicar
 
   script.
-    document.getElementById('licencia').addEventListener('change', function(){
-      const grupo = document.getElementById('marcaAguaGrupo');
-      grupo.style.display = this.value === 'con_copyright' ? 'block' : 'none';
+    const licencia = document.getElementById('licencia');
+    const grupo = document.getElementById('marcaAguaGrupo');
+    const archivos = document.getElementById('imagenes');
+    function actualizarMarca() {
+      grupo.style.display = licencia.value === 'con_copyright' ? 'block' : 'none';
+    }
+    licencia.addEventListener('change', actualizarMarca);
+    actualizarMarca();
+    archivos.addEventListener('change', function () {
+      const pesados = Array.from(this.files).some(function (f) { return f.size > 5 * 1024 * 1024; });
+      if (this.files.length > 5 || pesados) {
+        alert('Podés subir hasta 5 imágenes de 5 MB cada una.');
+        this.value = '';
+      }
     });

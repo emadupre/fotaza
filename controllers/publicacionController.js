@@ -91,6 +91,12 @@ exports.crearPublicacion = async (req, res) => {
     res.redirect("/publicaciones/" + publicacion.id);
   } catch (error) {
     console.error(error);
+    if (
+      error.http_code === 400 ||
+      /unsupported image format|Input buffer/i.test(error.message || "")
+    ) {
+      return volver("Alguno de los archivos no es una imagen valida");
+    }
     res.status(500).send("Error al crear la publicacion");
   }
 };
@@ -507,37 +513,37 @@ exports.mostrarEditarPublicacion = async (req, res) => {
         .status(403)
         .send("No se puede editar, la publicacion tiene denuncias");
     }
-const multer = require("multer");
-const path = require("path");
+    const multer = require("multer");
+    const path = require("path");
 
-//config para el multer y que guarde las imagenes en ->/uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/");
-  },
-  filename: (req, file, cb) => {
-    const uniqueName = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, uniqueName + path.extname(file.originalname));
-  },
-});
+    //config para el multer y que guarde las imagenes en ->/uploads
+    const storage = multer.diskStorage({
+      destination: (req, file, cb) => {
+        cb(null, "uploads/");
+      },
+      filename: (req, file, cb) => {
+        const uniqueName = Date.now() + "-" + Math.round(Math.random() * 1e9);
+        cb(null, uniqueName + path.extname(file.originalname));
+      },
+    });
 
-const uploads = multer({
-  storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // con esto ya defino que el maximo de la imagen sea 5mb para ahorrar espacio en la bd
-  fileFilter: (req, file, cb) => {
-    const tiposPermitidos = /jpeg|jpg|png|gif|webp/;
-    const ext = tiposPermitidos.test(
-      path.extname(file.originalname).toLowerCase(),
-    );
-    const mime = tiposPermitidos.test(file.mimetype);
-    if (ext && mime) {
-      return cb(null, true);
-    }
-    cb(new Error("Solo imageenes (jpeg, jpg, png, gif, webp)"));
-  },
-});
+    const uploads = multer({
+      storage,
+      limits: { fileSize: 5 * 1024 * 1024 }, // con esto ya defino que el maximo de la imagen sea 5mb para ahorrar espacio en la bd
+      fileFilter: (req, file, cb) => {
+        const tiposPermitidos = /jpeg|jpg|png|gif|webp/;
+        const ext = tiposPermitidos.test(
+          path.extname(file.originalname).toLowerCase(),
+        );
+        const mime = tiposPermitidos.test(file.mimetype);
+        if (ext && mime) {
+          return cb(null, true);
+        }
+        cb(new Error("Solo imageenes (jpeg, jpg, png, gif, webp)"));
+      },
+    });
 
-module.exports = uploads;
+    module.exports = uploads;
     res.render("editar_publicacion", { publicacion });
   } catch (error) {
     console.error(error);

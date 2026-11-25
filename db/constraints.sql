@@ -46,6 +46,15 @@ ALTER TABLE mensajes_privados ADD CONSTRAINT ck_mensajes_distinto_destinatario C
 ALTER TABLE mensajes_privados DROP CONSTRAINT IF EXISTS ck_mensajes_contenido;
 ALTER TABLE mensajes_privados ADD CONSTRAINT ck_mensajes_contenido CHECK (char_length(btrim(contenido)) > 0);
 
+ALTER TABLE denuncias_comentarios
+  ADD COLUMN IF NOT EXISTS estado VARCHAR(12) NOT NULL DEFAULT 'pendiente';
+
+ALTER TABLE denuncias_comentarios DROP CONSTRAINT IF EXISTS ck_denuncias_comentarios_estado;
+ALTER TABLE denuncias_comentarios ADD CONSTRAINT ck_denuncias_comentarios_estado CHECK (estado IN ('pendiente', 'desestimada', 'aceptada'));
+
+ALTER TABLE colecciones DROP CONSTRAINT IF EXISTS ck_colecciones_nombre;
+ALTER TABLE colecciones ADD CONSTRAINT ck_colecciones_nombre CHECK (char_length(btrim(nombre)) > 0);
+
 -- documentacion importante --
 COMMENT ON TABLE usuarios IS 'cuentas ded la plataforma. rol: usuario o validador. cuenta_activa pasa a false al llegar a 3 publicaciones dadas de baja.';
 COMMENT ON TABLE publicaciones IS 'publicacion de un usuario: titulo, descripcion, etiqueta y una o mas imagenes. estado: activa, en_revision o baja.';
@@ -68,3 +77,4 @@ COMMENT ON COLUMN imagenes.total_votos IS 'dato derivado: cantidad de filas en v
 COMMENT ON COLUMN imagenes.comentarios_cerrados IS 'el autor puede cerrar los comentarios, se conservan los anteriores.';
 COMMENT ON COLUMN notificaciones.referencia_id IS 'id del objeto relacionado. referencia polimorfica: no tiene fk, el tipo estaa en referencia_tipo.';
 COMMENT ON COLUMN denuncias_imagenes.estado IS 'pendiente: sin resolver. desestimada: el validador la descarto. aceptada: llevo a la baja de la publicacion.';
+COMMENT ON COLUMN denuncias_comentarios.estado IS 'pendiente: sin resolver. desestimada: el autor la descarto. aceptada: el comentario fue borrado.';

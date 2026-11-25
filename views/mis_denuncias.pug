@@ -1,0 +1,37 @@
+extends layout.pug
+
+block content
+  h2.mb-1 Denuncias recibidas
+  p.text-muted.small
+    | Comentarios de tus publicaciones que otros usuarios denunciaron. Si la denuncia corresponde, borrá el comentario; si no, desestimala.
+
+  if grupos.length === 0
+    .alert.alert-info No hay denuncias pendientes.
+
+  each grupo in grupos
+    .card.mb-4.shadow-sm
+      .card-header
+        | Publicación: 
+        a(href=`/publicaciones/${grupo.publicacion.id}`)= grupo.publicacion.titulo
+      .list-group.list-group-flush
+        each c in grupo.comentarios
+          .list-group-item
+            p.mb-1
+              strong= c.autor
+              |  comentó el #{c.fecha.toLocaleDateString('es-AR')}:
+            blockquote.border-start.ps-3.mb-3= c.texto
+            p.mb-1.small.fw-bold #{c.denuncias.length} denuncia#{c.denuncias.length === 1 ? '' : 's'}
+            ul.small.mb-3
+              each d in c.denuncias
+                li
+                  strong= d.denunciante
+                  |  — #{d.motivo}
+                  if d.descripcion
+                    | : #{d.descripcion}
+            .d-flex.gap-2
+              form(action=`/mis-denuncias/comentarios/${c.id}/borrar` method="POST" onsubmit="return confirm('¿Borrar este comentario?')")
+                button.btn.btn-sm.btn-danger(type="submit")
+                  i.bi.bi-trash.me-1
+                  | Borrar comentario
+              form(action=`/mis-denuncias/comentarios/${c.id}/desestimar` method="POST")
+                button.btn.btn-sm.btn-outline-secondary(type="submit") Desestimar denuncias

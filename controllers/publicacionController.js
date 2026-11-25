@@ -17,6 +17,7 @@ const { procesarImagen } = require("../services/imagenService");
 const sequelize = require("../config/database");
 const { Op } = require("sequelize");
 const { normalizarEtiquetas } = require("../helpers/etiquetas");
+const { FAVORITOS, esFavorita } = require("../helpers/colecciones");
 
 // form publicar
 exports.mostrarFormulario = (req, res) => {
@@ -151,10 +152,14 @@ exports.verPublicacion = async (req, res) => {
 
     // traemos las colecciones del usuario
     let coleccionesUsuario = [];
+    let favorita = false;
     if (sesion) {
-      coleccionesUsuario = await Coleccion.findAll({
+      const todas = await Coleccion.findAll({
         where: { usuario_id: sesion.id },
+        order: [["nombre", "ASC"]],
       });
+      coleccionesUsuario = todas.filter((c) => c.nombre !== FAVORITOS); // «Favoritos» tiene su propio botón ★
+      favorita = await esFavorita(sesion.id, publicacion.id);
     }
 
     res.render("publicacion", {
@@ -384,6 +389,11 @@ exports.borrarComentario = async (req, res) => {
     await comentario.update({
       borrado: true,
     });
+
+    await DenunciaComentario.update(
+      { estado: "aceptada" },
+      { where: { comentario_id: comentario.id, estado: "pendiente" } },
+    );
 
     res.redirect("/publicaciones/" + publicacion.id);
   } catch (error) {

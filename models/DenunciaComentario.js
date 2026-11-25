@@ -20,6 +20,11 @@ const DenunciaComentario = sequelize.define(
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
     },
+    estado: {
+      type: DataTypes.STRING(12),
+      allowNull: false,
+      defaultValue: "pendiente",
+    },
     usuario_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -34,7 +39,7 @@ const DenunciaComentario = sequelize.define(
     timestamps: false,
     indexes: [
       { unique: true, fields: ["usuario_id", "comentario_id"] },
-      { fields: ["comentario_id"] },
+      { fields: ["comentario_id", "estado"] },
     ],
   },
 );

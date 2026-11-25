@@ -1,23 +1,43 @@
-extends layout.pug 
+extends layout.pug
 
-block content 
-  h2 Mis colecciones 
-  if colecciones.length > 0
-    each col in colecciones 
-      h4= col.nombre
-      if col.Publicacions && col.Publicacions.length > 0
-        .row 
-          each pub in col.Publicacions
-            .col-md-4.mb-3 
-              .card 
-                if pub.Imagens && pub.Imagens.length > 0
-                  img.card-img-top(src=pub.Imagens[0].url alt=pub.titulo style="height:200px;object-fit:cover")
-                .card-body 
-                  h5.card-title= pub.titulo 
-                  a.btn.btn-sm.btn-primary(href=`/publicaciones/${pub.id}`) Ver detalle
-      else 
-        p No hay publicaciones en esta colección.
-  else
-    .alert.alert-info No tienes colecciones.
+block content
+  h2.mb-1 Mis colecciones
+  p.text-muted.small Solo vos podés ver tus colecciones y favoritos.
 
-  a.btn.btn-outline-secondary(href="/buscar") Buscar publicaciones para guardar
+  form.row.g-2.mb-4(action="/colecciones/nueva" method="POST")
+    .col-sm-6.col-md-4
+      input.form-control(type="text" name="nombre" maxlength="50" placeholder="Nueva colección (ej: Paisajes, Ideas)" required)
+    .col-auto
+      button.btn.btn-primary(type="submit")
+        i.bi.bi-plus-circle.me-1
+        | Crear
+
+  each col in colecciones
+    - var pubs = col.Publicacions || []
+    .d-flex.align-items-center.justify-content-between.mt-4.mb-2
+      h4.mb-0
+        if col.nombre === FAVORITOS
+          i.bi.bi-star-fill.text-warning.me-2
+        = col.nombre
+        small.text-muted.ms-2 (#{pubs.length})
+      if col.nombre !== FAVORITOS
+        form(action=`/colecciones/${col.id}/borrar` method="POST" onsubmit="return confirm('¿Eliminar esta colección? Las publicaciones no se borran.')")
+          button.btn.btn-sm.btn-outline-danger(type="submit")
+            i.bi.bi-trash.me-1
+            | Eliminar colección
+    if pubs.length > 0
+      .row
+        each pub in pubs
+          .col-sm-6.col-lg-3.mb-3
+            .card.h-100.shadow-sm
+              if pub.Imagens && pub.Imagens.length > 0
+                img.card-img-top(src=pub.Imagens[0].url alt=pub.titulo style="height:180px;object-fit:cover")
+              .card-body.d-flex.flex-column
+                h5.card-title.h6= pub.titulo
+                a.btn.btn-sm.btn-primary.mb-2(href=`/publicaciones/${pub.id}`) Ver detalle
+                form.mt-auto(action=`/colecciones/${col.id}/quitar/${pub.id}` method="POST")
+                  button.btn.btn-sm.btn-outline-secondary.w-100(type="submit") Quitar
+    else
+      p.text-muted Todavía no hay publicaciones en esta colección.
+
+  a.btn.btn-outline-secondary.mt-4(href="/buscar") Buscar publicaciones para guardar

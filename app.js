@@ -38,6 +38,7 @@ app.use(async (req, res, next) => {
 
 app.use((req, res, next) => {
   res.locals.usuario = req.session.usuario || null;
+  delete req.session.aviso;
   next();
 });
 
@@ -55,6 +56,7 @@ app.use("/", require("./routes/validadorRoutes"));
 app.use("/", require("./routes/notificacionRoutes"));
 app.use("/", require("./routes/mensajeRoutes"));
 app.use("/", require("./routes/coleccionRoutes"));
+app.use("/", require("./routes/denunciaRoutes"));
 app.use((req, res) => {
   res.status(404).render("error", {
     codigo: 404,

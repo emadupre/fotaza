@@ -60,14 +60,14 @@ block content
                 span.text-warning.fs-5 ★ #{Number(imagen.promedio_valoracion).toFixed(1)}
                 small.text-muted (#{imagen.total_votos} votos)
 
-        if usuario && !esAutor
+        if usuario
           .card.mb-4.shadow-sm
             .card-body              
               form(action="/colecciones" method="POST")
                 input(type="hidden" name="publicacion_id" value=publicacion.id)
                 .row.g-2.align-items-end
                   .col-auto
-                    select.form-select.form-select-sm(name="coleccion_id") //acá necesitamos pasar las colecciones que ya crea el usuario desde el get /publicaciones/:id
+                    select.form-select.form-select-sm(name="coleccion_id")
                       option(value="") Nueva colección.. 
                       if coleccionesUsuario
                         each col in coleccionesUsuario
@@ -90,6 +90,12 @@ block content
         | Por 
         a(href=`/perfil/${publicacion.Usuario.id}`)= publicacion.Usuario.nombre
         |   #{publicacion.fecha_creacion.toLocaleDateString('es-AR')}
+      
+      if usuario 
+        form.d-inline(action=`/favoritos/${publicacion.id}` method="POST")
+          button.btn.btn-sm.mb-3(type="submit" class=esFavorita ? 'btn-warning' : 'btn-outline-warning')
+            i.bi.me-1(class=esFavorita ? 'bi-star-fill' : 'bi-star')
+            = esFavorita ? ' En favoritos' : ' Agregar a favoritos'
 
       if esAutor && publicacion.estado !== 'en_revision'
         a.btn.btn-sm.btn-outline-secondary.mb-3(href=`/publicaciones/${publicacion.id}/editar`)

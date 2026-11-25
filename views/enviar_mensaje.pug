@@ -2,6 +2,8 @@ extends layout.pug
 
 block content 
   h2 Enviar mensaje a #{destinatario.nombre}
+  if error
+    .alert.alert-danger= error
   form(action="/mensajes/enviar" method="POST")
     input(type="hidden" name="destinatario_id" value=destinatario.id)
     .mb-3 

@@ -1,0 +1,30 @@
+mixin tarjeta(pub, destacada)
+  - var imgs = pub.Imagens || []
+  - var votos = imgs.reduce(function (s, i) { return s + i.total_votos }, 0)
+  - var mejor = imgs.reduce(function (m, i) { return Number(i.promedio_valoracion) > m ? Number(i.promedio_valoracion) : m }, 0)
+  - var tags = pub.Etiquetas || pub.Etiqueta || []
+  .col-sm-6.col-lg-3.mb-3
+    .card.h-100.shadow-sm
+      if imgs.length > 0
+        img.card-img-top(src=imgs[0].url alt=pub.titulo style="height:200px;object-fit:cover")
+      .card-body.d-flex.flex-column
+        h5.card-title
+          = pub.titulo
+          if destacada
+            span.badge.bg-warning.text-dark.ms-2 ★ Destacada
+        if pub.descripcion
+          p.card-text.small= pub.descripcion.length > 100 ? pub.descripcion.substring(0, 100) + '…' : pub.descripcion
+        p.mb-1.small
+          | Por 
+          a(href=`/perfil/${pub.Usuario.id}`)= pub.Usuario.nombre
+        p.mb-2.small
+          if votos > 0
+            span.text-warning ★ #{mejor.toFixed(1)}
+            span.text-muted  (#{votos} votos)
+          else
+            span.text-muted Sin votos todavía
+        if tags.length > 0
+          .mb-2
+            each tag in tags
+              span.badge.bg-secondary.me-1= tag.nombre
+        a.btn.btn-sm.btn-primary.mt-auto(href=`/publicaciones/${pub.id}`) Ver detalle

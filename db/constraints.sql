@@ -43,6 +43,9 @@ ALTER TABLE etiquetas ADD CONSTRAINT ck_etiquetas_nombre CHECK (char_length(btri
 ALTER TABLE mensajes_privados DROP CONSTRAINT IF EXISTS ck_mensajes_distinto_destinatario;
 ALTER TABLE mensajes_privados ADD CONSTRAINT ck_mensajes_distinto_destinatario CHECK (remitente_id <> destinatario_id);
 
+ALTER TABLE mensajes_privados DROP CONSTRAINT IF EXISTS ck_mensajes_contenido;
+ALTER TABLE mensajes_privados ADD CONSTRAINT ck_mensajes_contenido CHECK (char_length(btrim(contenido)) > 0);
+
 -- documentacion importante --
 COMMENT ON TABLE usuarios IS 'cuentas ded la plataforma. rol: usuario o validador. cuenta_activa pasa a false al llegar a 3 publicaciones dadas de baja.';
 COMMENT ON TABLE publicaciones IS 'publicacion de un usuario: titulo, descripcion, etiqueta y una o mas imagenes. estado: activa, en_revision o baja.';

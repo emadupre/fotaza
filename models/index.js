@@ -59,7 +59,7 @@ relacion(Usuario, MensajePrivado, "remitente_id", "RESTRICT", {
 });
 relacion(Usuario, MensajePrivado, "destinatario_id", "RESTRICT", {
   padre: "mensajes_recibidos",
-  hijo: "destinataario",
+  hijo: "destinatario",
 });
 relacion(Imagen, MensajePrivado, "imagen_id", "SET NULL");
 

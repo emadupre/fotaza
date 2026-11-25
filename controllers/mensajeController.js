@@ -57,6 +57,9 @@ exports.listarConversaciones = async (req, res) => {
 // form para enviar el msj
 exports.mostrarEnviarMensaje = async (req, res) => {
   try {
+    const id = Number(req.params.usuario_id);
+    if (!Number.isInteger(id) || id === req.session.usuario.id)
+      return res.redirect("/mensajes");
     const destinatario = await Usuario.findByPk(req.params.usuario_id);
     if (!destinatario) return res.status(404).send("Usuario no encontrado");
     res.render("enviar_mensaje", { destinatario });
@@ -69,14 +72,31 @@ exports.mostrarEnviarMensaje = async (req, res) => {
 // enviar msj
 exports.enviarMensaje = async (req, res) => {
   try {
-    const { destinatario_id, contenido } = req.body;
+    const yo = req.session.usuario.id;
+    const destinatario_id = Number(req.body.destinatario_id);
+    const contenido = (req.body.contenido || "").trim();
+
+    if (!Number.isInteger(destinatario_id))
+      return res.status(404).send("Usuario no encontrado");
+    const destinatario = await Usuario.findByPk(destinatario_id);
+    if (!destinatario || !destinatario.cuenta_activa)
+      return res.status(404).send("Usuario no encontrado");
+    if (destinatario.id === yo)
+      return res.status(400).send("No podés enviarte mensajes a vos mismo");
+
+    if (!contenido || contenido.length > 2000) {
+      return res.status(400).render("enviar_mensaje", {
+        destinatario,
+        contenido,
+        error: "El mensaje no puede estar vacío ni superar los 2000 caracteres",
+      });
+    }
 
     await MensajePrivado.create({
-      remitente_id: req.session.usuario.id,
+      remitente_id: yo,
       destinatario_id,
       contenido,
     });
-
     res.redirect("/mensajes/conversacion/" + destinatario_id);
   } catch (error) {
     console.error(error);
@@ -87,6 +107,9 @@ exports.enviarMensaje = async (req, res) => {
 // ver conversacion
 exports.verConversacion = async (req, res) => {
   try {
+    const otroId = Number(req.params.otro_usuario_id);
+    if (!Number.isInteger(otroId) || otroId === req.session.usuario.id)
+      return res.redirect("/mensajes");
     const otroUsuario = await Usuario.findByPk(req.params.otro_usuario_id);
     if (!otroUsuario) return res.status(404).send("Usuario no encontrado");
 

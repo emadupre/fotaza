@@ -1,47 +1,68 @@
-extends layout.pug 
+extends layout.pug
 
-block content 
-  h2 Buscar publicaciones
+block content
+  include mixins/tarjeta.pug
 
-  form(action="/buscar" method="GET" class="mb-4")
-    .row 
-      .col-md-4.mb-2
-        input.form-control(type="text" name="q" placeholder="Buscar.." value=terminos.q || '')
-      .col-md-2.mb-2 
-        input.form-control(type="text" name="etiqueta" placeholder="Etiqueta" value=terminos.etiqueta || '')
-      .col-md-2.mb-2
-        input.form-control(type="text" name="usuario" placeholder="Usuario" value=terminos.usuario || '')
-      .col-md-2.mb-2 
-        select.form-select(name="licencia")
-          option(value="") Licencia(todas)
-          option(value="sin_copyright" selected=terminos.licencia === 'sin_copyright') Sin Copyright
-          option(value="con_copyright" selected=terminos.licencia === 'con_copyright') Con Copyright
-      .col-md-1.mb-2 
-        input.form-control(type="number" name="valoracion_min" placeholder="Valoración" min="0" max="5" step="0.1" value=terminos.valoracion_min || '')
-      .col-md-1.mb-2
-        button.btn.btn-primary.w-100(type='submit') Buscar
+  h2.mb-3 Buscar publicaciones
+
+  form.card.card-body.mb-4(action="/buscar" method="GET")
+    .row.g-2
+      .col-md-4
+        label.form-label(for="q") Texto
+        input#q.form-control(type="text" name="q" placeholder="Título, descripción o etiqueta" value=terminos.q)
+      .col-md-4
+        label.form-label(for="etiqueta") Etiquetas
+        input#etiqueta.form-control(type="text" name="etiqueta" placeholder="paisaje, mar (debe tener todas)" value=terminos.etiqueta)
+      .col-md-4
+        label.form-label(for="autor") Autor
+        input#autor.form-control(type="text" name="usuario" placeholder="Nombre del autor" value=terminos.usuario)
+      .col-md-3
+        label.form-label(for="licencia") Licencia
+        select#licencia.form-select(name="licencia")
+          option(value="") Todas
+          option(value="sin_copyright" selected=terminos.licencia === 'sin_copyright') Sin copyright
+          option(value="con_copyright" selected=terminos.licencia === 'con_copyright') Con copyright
+      .col-md-2
+        label.form-label(for="valoracion_min") Valoración mín.
+        input#valoracion_min.form-control(type="number" name="valoracion_min" min="0" max="5" step="0.5" value=terminos.valoracion_min)
+      .col-md-2
+        label.form-label(for="desde") Desde
+        input#desde.form-control(type="date" name="desde" value=terminos.desde)
+      .col-md-2
+        label.form-label(for="hasta") Hasta
+        input#hasta.form-control(type="date" name="hasta" value=terminos.hasta)
+      .col-md-3
+        label.form-label(for="orden") Ordenar por
+        select#orden.form-select(name="orden")
+          option(value="recientes" selected=terminos.orden === 'recientes') Más recientes
+          option(value="antiguas" selected=terminos.orden === 'antiguas') Más antiguas
+          option(value="mejor_valoradas" selected=terminos.orden === 'mejor_valoradas') Mejor valoradas
+          option(value="mas_votadas" selected=terminos.orden === 'mas_votadas') Más votadas
+    .d-flex.align-items-center.gap-3.mt-3
+      if usuario
+        .form-check.mb-0
+          input#seguidos.form-check-input(type="checkbox" name="seguidos" value="1" checked=terminos.seguidos)
+          label.form-check-label(for="seguidos") Solo de usuarios que sigo
+      button.btn.btn-primary.ms-auto(type="submit")
+        i.bi.bi-search.me-1
+        | Buscar
+      a.btn.btn-outline-secondary(href="/buscar") Limpiar
+
+  p.text-muted #{total} resultado#{total === 1 ? '' : 's'}
 
   if publicaciones && publicaciones.length > 0
-    .row 
-      each pub in publicaciones 
-        .col-md-4.mb-3 
-          .card 
-            if pub.Imagens && pub.Imagens.length > 0
-              img.card-img-top(src=pub.Imagens[0].url alt=pub.titulo style="height:200px;object-fit:cover")
-            .card-body
-              h5.card-title= pub.titulo 
-              p.card-text= pub.descripcion ? pub.descripcion.substring(0,100) + '...' : '' 
-              p 
-                strong Por: 
-                a(href=`/perfil/${pub.Usuario.id}`)= pub.Usuario.nombre 
-              if pub.Imagens && pub.Imagens.length > 0
-                p 
-                  strong Valoracion: 
-                  | #{Number(pub.Imagens[0].promedio_valoracion).toFixed(1)} / 5
-                  | (#{pub.Imagens[0].total_votos} votos)
-              if pub.Etiqueta && pub.Etiqueta.length > 0
-                each tag in pub.Etiqueta 
-                  span.badge.bg-secondary.me-1= tag.nombre
-              a.btn.btn-sm.btn-primary.mt-2(href=`/publicaciones/${pub.id}`) Ver detalle
-  else 
-    .alert.alert-info No hay publicaciones con esos criterios de busqueda, intenta de nuevo. 
+    .row
+      each pub in publicaciones
+        +tarjeta(pub, false)
+  else
+    .alert.alert-info No hay publicaciones con esos criterios. Probá con menos filtros.
+
+  if totalPaginas > 1
+    nav.mt-3(aria-label="Páginas")
+      ul.pagination.justify-content-center
+        li.page-item(class=pagina <= 1 ? 'disabled' : '')
+          a.page-link(href=`/buscar?${queryBase}${queryBase ? '&' : ''}pagina=${pagina - 1}`) Anterior
+        li.page-item.disabled
+          span.page-link Página #{pagina} de #{totalPaginas}
+        li.page-item(class=pagina >= totalPaginas ? 'disabled' : '')
+          a.page-link(href=`/buscar?${queryBase}${queryBase ? '&' : ''}pagina=${pagina + 1}`) Siguiente

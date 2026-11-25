@@ -16,7 +16,7 @@ const {
 const { procesarImagen } = require("../services/imagenService");
 const sequelize = require("../config/database");
 const { Op } = require("sequelize");
-const { normalizarEtiquetas } = require("../helpers/etiqueta");
+const { normalizarEtiquetas } = require("../helpers/etiquetas");
 
 // form publicar
 exports.mostrarFormulario = (req, res) => {
